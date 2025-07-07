@@ -1,5 +1,4 @@
 // Views/MatchmakingView.swift
-
 import SwiftUI
 
 struct MatchmakingView: View {
@@ -15,34 +14,26 @@ struct MatchmakingView: View {
                     ProgressView()
                 
                 case .in_progress:
-                    // 👇 ここをNavigationLinkに書き換える
+                    // 👇 正しい遷移先を指定する
                     NavigationLink(destination: OnlineGameView(viewModel: viewModel)) {
-                        VStack {
+                        VStack(spacing: 10) {
                             Text("対戦相手が見つかりました！")
                                 .font(.title)
                             Text("\(game.hostPlayerName) vs \(game.guestPlayerName ?? "...")")
                                 .font(.headline)
-                                .padding(.top, 5)
-                            Text("タップして対戦開始")
-                                .foregroundColor(Color("AccentColor"))
-                                .padding(.top, 20)
+                            Text("タップして対戦開始").foregroundColor(.accentColor).padding(.top)
                         }
                     }
 
                 case .finished:
-                    // (変更なし)
-                    Text("ゲーム終了！")
-                        .font(.title)
+                    Text("ゲーム終了").font(.title)
                 }
             } else {
-                // (変更なし)
-                Text("オンライン対戦")
-                    .font(.largeTitle)
+                Text("オンライン対戦").font(.largeTitle)
                 Button("対戦相手を探す") {
                     viewModel.startMatchmaking()
                 }
-                .buttonStyle(.borderedProminent)
-                .padding()
+                .buttonStyle(.borderedProminent).padding()
             }
         }
         .navigationTitle("マッチメイキング")

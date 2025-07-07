@@ -48,7 +48,7 @@ struct GameSetupView: View {
             Section {
                 NavigationLink {
                     // ゲーム画面に遷移する
-                    ContentView(viewModel: viewModel)
+                    ContentView()
                         .onAppear {
                             // ゲーム画面が表示される直前に、設定をViewModelに反映させる
                             viewModel.gameMode = self.selectedGameMode

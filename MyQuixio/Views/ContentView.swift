@@ -4,10 +4,9 @@ import SwiftUI
 
 struct ContentView: View {
     
-    // 一人プレイ用のViewModelを再び@StateObjectで生成・保持する
+    // 一人プレイ専用のViewModelを、自分自身で生成・管理する
     @StateObject private var viewModel = GameViewModel()
     
-    // isShowingResetAlertなどは以前のまま
     @State private var isShowingResetAlert = false
     @State private var isShowingSettings: Bool = false
     @State private var invalidAttempts: Int = 0
@@ -27,23 +26,22 @@ struct ContentView: View {
                     .frame(height: 50)
                     .id("turnIndicator_" + viewModel.turnIndicatorText)
 
-                // GameBoardViewに、GameViewModelが持つ@Bindingプロパティを渡す
                 GameBoardView(
-                    board: viewModel.board,
+                    board: viewModel.board, // GameViewModelが持つBindingを渡す
                     selectedCoordinate: $viewModel.selectedCoordinate,
                     onTapCell: { row, col in
                         viewModel.handleTap(onRow: row, col: col)
                     }
-                ).shake(times: invalidAttempts)
-                    .onReceive(viewModel.invalidMovePublisher) { _ in
-                        withAnimation(.default) {
-                            self.invalidAttempts += 1
-                        }
+                )
+                .shake(times: invalidAttempts)
+                .onReceive(viewModel.invalidMovePublisher) { _ in
+                    withAnimation(.default) {
+                        self.invalidAttempts += 1
                     }
+                }
                 
                 Spacer()
                 
-                // リセットボタン
                 Button {
                     isShowingResetAlert = true
                 } label: {
@@ -57,6 +55,7 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color("AccentColor"))
                     .cornerRadius(12)
+                    .shadow(radius: 5, y: 3)
                 }
                 .padding(.horizontal, 40)
                 .padding(.vertical)
@@ -66,23 +65,29 @@ struct ContentView: View {
             .padding()
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { isShowingSettings = true } label: {
-                        Image(systemName: "gearshape.fill").font(.title2)
+                    Button {
+                        isShowingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
                     }
                 }
             }
             .sheet(isPresented: $isShowingSettings) {
-                NavigationView { SettingsView(viewModel: viewModel) }
+                NavigationView {
+                    // GameViewModelを渡す
+                    SettingsView(viewModel: viewModel)
+                }
             }
                 
             // 勝利画面
             if let winner = viewModel.winner {
-                // (勝利画面のコードは変更なし)
+                // (ここのコードは変更なし)
             }
             
             // AI思考中インジケーター
             if viewModel.isAITurn {
-                // (AI思考中画面のコードは変更なし)
+                // (ここのコードは変更なし)
             }
         }
         .alert("ゲームをリセット", isPresented: $isShowingResetAlert) {
@@ -99,8 +104,7 @@ struct ContentView: View {
     }
 }
 
-
 #Preview {
-    // プレビュー用に、ContentView自身がViewModelを持つ形に戻す
+    // ContentView自身がViewModelを持つので、引数は不要
     ContentView()
 }

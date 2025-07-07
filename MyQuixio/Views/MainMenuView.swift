@@ -34,9 +34,22 @@ struct MainMenuView: View {
                             .foregroundColor(.white)
                             .cornerRadius(20)
                     }
+                    
+                    NavigationLink{ MatchmakingView()
+                    } label:{
+                        Text("オンライン対戦")
+                            .font(.system(.title, design: .rounded).bold())
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(20)
+                    }
+                    
                     Button("チュートリアル") {
-                            isShowingTutorial = true
-                        }
+                        isShowingTutorial = true
+                    }
                     .font(.system(.title, design: .rounded).bold())
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -77,34 +90,11 @@ struct MainMenuView: View {
                     NavigationView {
                         SettingsView(viewModel: viewModel)
                     }}
-                VStack(spacing: 20) {
-                                Text("Slide Game")
-                                    .font(.system(size: 48, weight: .bold, design: .rounded))
-
-                                // --- ここから追加 ---
-                                NavigationLink(destination: MatchmakingView()) {
-                                    Text("オンライン対戦")
-                                        .font(.title2)
-                                        .fontWeight(.bold)
-                                        .padding()
-                                        .frame(maxWidth: .infinity)
-                                        .background(Color.green)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(10)
-                                }
-                                // --- ここまで追加 ---
-                                
-                                // 既存の他のメニューボタン...
-                                // 例: NavigationLink(destination: ContentView()) { ... }
-                            }
-                            .padding()
-                            .navigationTitle("メインメニュー")
-                            .navigationBarHidden(true)
             }
         }
     }
+    
 }
-
 #Preview {
     // プレビュー用に、シートを表示するための仮の親Viewを用意する
     VStack {
