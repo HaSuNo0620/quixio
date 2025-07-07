@@ -1,0 +1,19 @@
+# Xcode
+build/
+*.xcodeproj
+*.xcworkspace
+*.xcuserdatad
+*.xctestrun
+*.plist
+
+# Swift Package Manager
+.build/
+Packages/
+*.swiftdeps
+*.swiftmodule
+
+# macOS
+.DS_Store
+
+# Sensitive Files
+GoogleService-Info.plist
