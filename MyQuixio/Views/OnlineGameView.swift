@@ -1,6 +1,7 @@
 // Views/OnlineGameView.swift
 
 import SwiftUI
+import FirebaseFirestore
 
 struct OnlineGameView: View {
     

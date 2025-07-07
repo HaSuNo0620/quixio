@@ -12,8 +12,8 @@ class GameService: ObservableObject {
     private var listener: ListenerRegistration?
     
     // 仮のユーザー情報（将来的に認証機能で置き換えます）
-    private var currentUserID: String { "player_id_\(UIDevice.current.name)" }
-    private var currentUserName: String { "Player_\(Int.random(in: 100...999))" }
+    var currentUserID: String { "player_id_\(UIDevice.current.name)" }
+    var currentUserName: String { "Player_\(Int.random(in: 100...999))" }
 
     // MARK: - Matchmaking
     
@@ -141,4 +141,25 @@ class GameService: ObservableObject {
                 }
             }
         }
+    
+    // 勝者を記録し、ゲームの状態を"finished"に更新します。
+    func endGame(winner: PlayerTurn) {
+        guard let gameID = game?.id else { return }
+        
+        let updateData: [String: Any] = [
+            "winner": winner.rawValue,
+            "status": GameStatus.finished.rawValue
+        ]
+        
+        db.collection("games").document(gameID).updateData(updateData)
+    }
+
+    /// ゲームから離脱し、データベースからゲーム情報を削除します。
+    func leaveGame() {
+        guard let gameID = game?.id else { return }
+        // 監視を停止
+        listener?.remove()
+        // ドキュメントを削除
+        db.collection("games").document(gameID).delete()
+    }
 }

@@ -16,8 +16,7 @@ struct MatchmakingView: View {
                 
                 case .in_progress:
                     // 👇 ここをNavigationLinkに書き換える
-                    NavigationLink(destination: OnlineGameView(viewModel: viewModel),
-                                   label: {
+                    NavigationLink(destination: OnlineGameView(viewModel: viewModel)) {
                         VStack {
                             Text("対戦相手が見つかりました！")
                                 .font(.title)
@@ -28,7 +27,7 @@ struct MatchmakingView: View {
                                 .foregroundColor(Color("AccentColor"))
                                 .padding(.top, 20)
                         }
-                    })
+                    }
 
                 case .finished:
                     // (変更なし)

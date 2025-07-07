@@ -4,7 +4,7 @@ import SwiftUI
 
 struct GameBoardView: View {
     // 親ビューからデータを受け取るための「リンク」
-    @Binding var board: [[Piece]]
+    let board: [[Piece]]
     @Binding var selectedCoordinate: (row: Int, col: Int)?
     
     // 親ビューから「タップされた時の処理」を受け取る
