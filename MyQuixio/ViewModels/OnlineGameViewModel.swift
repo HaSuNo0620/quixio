@@ -6,7 +6,12 @@ import FirebaseFirestore // Timestampのために必要
 class OnlineGameViewModel: ObservableObject {
     @Published var gameService = GameService()
     @Published var game: GameSession?
-    @Published var selectedCoordinate: (row: Int, col: Int)? = nil // 👈 選択中のマスを保持
+    @Published var selectedCoordinate: (row: Int, col: Int)? = nil
+    
+    // ▼▼▼【ここから追加】エラーハンドリング用のプロパティ ▼▼▼
+    @Published var showErrorAlert = false
+    @Published var errorMessage = ""
+    // ▲▲▲ 追加ここまで ▲▲▲
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -29,7 +34,19 @@ class OnlineGameViewModel: ObservableObject {
     }
     
     func startMatchmaking() {
-        gameService.findAndJoinGame()
+        Task {
+            do {
+                try await gameService.findAndJoinGame()
+            } catch let error as GameError {
+                // 補足した独自エラーのメッセージを設定
+                self.errorMessage = error.localizedDescription
+                self.showErrorAlert = true
+            } catch {
+                // その他の予期せぬエラー
+                self.errorMessage = GameError.unknownError.localizedDescription
+                self.showErrorAlert = true
+            }
+        }
     }
     
     // MARK: - Game Logic (ここから追加)
@@ -61,39 +78,13 @@ class OnlineGameViewModel: ObservableObject {
     
     /// 盤面データをスライドさせるヘルパー関数 (GameViewModelからコピー)
     private func slide(board: [String], from: (row: Int, col: Int), to: (row: Int, col: Int), for player: PlayerTurn) -> [String] {
-        var tempBoard = board
-        let pieceToSlide = (player == .host) ? "circle" : "cross" // ホストが○、ゲストが×とする
-        let sourceIndex = from.row * 5 + from.col
-        
-        // 1D配列を2Dに脳内変換して処理
-        var twoDimBoard = stride(from: 0, to: tempBoard.count, by: 5).map {
-            Array(tempBoard[$0..<min($0 + 5, tempBoard.count)])
-        }
-        
-        if from.row == to.row { // 横スライド
-            var rowArray = twoDimBoard[from.row]
-            let piece = rowArray.remove(at: from.col)
-            if to.col == 0 {
-                rowArray.insert(pieceToSlide, at: 0)
-            } else {
-                rowArray.append(pieceToSlide)
-            }
-            twoDimBoard[from.row] = rowArray
-        } else { // 縦スライド
-            var colArray = (0..<5).map { twoDimBoard[$0][from.col] }
-            let piece = colArray.remove(at: from.row)
-            if to.row == 0 {
-                colArray.insert(pieceToSlide, at: 0)
-            } else {
-                colArray.append(pieceToSlide)
-            }
-            for i in 0..<5 {
-                twoDimBoard[i][from.col] = colArray[i]
-            }
-        }
-        
+        let board2D = board.to2D()
+        let pieceToSlide = (player == .host) ? "circle" : "cross"
+
+        let newBoard2D = GameLogic.slide(board: board2D, from: from, to: to, piece: pieceToSlide)
+
         // 2Dを1Dに戻して返す
-        return twoDimBoard.flatMap { $0 }
+        return newBoard2D.flatMap { $0 }
     }
     
     var displayBoard: [[Piece]] {
@@ -164,46 +155,38 @@ class OnlineGameViewModel: ObservableObject {
     
     private func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
         guard let game = game, let myTurn = myTurn else { return }
-        
         let newBoard = slide(board: game.board, from: source, to: destination, for: myTurn)
-        
-        // 👇 --- ここからが修正箇所 ---
-        
-        // 勝者判定
-        if let winner = checkForWinner(on: newBoard) {
-            // 勝者がいれば、ゲームを終了させる
-            gameService.endGame(winner: winner)
-        } else {
-            // 勝者がいなければ、相手のターンにしてゲームを続行
-            let nextTurn: PlayerTurn = (myTurn == .host) ? .guest : .host
-            gameService.updateGame(board: newBoard, nextTurn: nextTurn)
+
+        Task {
+            if let winner = checkForWinner(on: newBoard) {
+                await gameService.endGame(winner: winner)
+            } else {
+                let nextTurn: PlayerTurn = (myTurn == .host) ? .guest : .host
+                await gameService.updateGame(board: newBoard, nextTurn: nextTurn)
+            }
         }
-        
-        // 👆 --- 修正ここまで ---
     }
-    
+
     // MARK: - Game Logic Helpers (ここから追加)
     
     /// 盤面をチェックして勝者を判定する (GameViewModelから移植・改造)
     private func checkForWinner(on board: [String]) -> PlayerTurn? {
-        let board2D = board.to2D()
-        
-        // 横
-        for r in 0..<5 {
-            if let p = checkLine(line: board2D[r]) { return p }
+        let board2D = board.to2D() // 既存のヘルパーで2D配列に変換
+
+        // 汎用ロジックを呼び出す
+        // `String` から `Player?` へのマッピングを提供
+        let result = GameLogic.checkForWinner(on: board2D) { pieceString in
+            switch pieceString {
+            case "circle": return .circle
+            case "cross": return .cross
+            default: return nil
+            }
         }
-        // 縦
-        for c in 0..<5 {
-            let colLine = board2D.map { $0[c] }
-            if let p = checkLine(line: colLine) { return p }
+        
+        // GameLogicからの結果 (Player) をこのViewModelで使うPlayerTurnに変換
+        if let winner = result?.player {
+            return winner == .circle ? .host : .guest
         }
-        // 斜め
-        let diag1 = (0..<5).map { board2D[$0][$0] }
-        if let p = checkLine(line: diag1) { return p }
-        
-        let diag2 = (0..<5).map { board2D[$0][4-$0] }
-        if let p = checkLine(line: diag2) { return p }
-        
         return nil
     }
     
@@ -219,7 +202,9 @@ class OnlineGameViewModel: ObservableObject {
     
     // ゲーム離脱用の関数を追加
     func leaveGame() {
-        gameService.leaveGame()
+        Task {
+            await gameService.leaveGame()
+        }
     }
 }
    // 便利なヘルパー拡張

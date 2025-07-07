@@ -1,165 +1,137 @@
-// Managers/GameService.swift
+// MyQuixio/Managers/GameService.swift を全体的に置き換え
 
 import Foundation
 import FirebaseFirestore
 
+
 class GameService: ObservableObject {
-    
+
     // MARK: - Properties
     @Published var game: GameSession?
-    
+
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?
-    
-    // 仮のユーザー情報（将来的に認証機能で置き換えます）
+
     var currentUserID: String { "player_id_\(UIDevice.current.name)" }
     var currentUserName: String { "Player_\(Int.random(in: 100...999))" }
 
-    // MARK: - Matchmaking
-    
-    /// マッチメイキングを開始または待機中のゲームに参加します。
-    func findAndJoinGame() {
-        // まずはリスナーをクリア
+    // MARK: - Matchmaking (async/await version)
+
+    func findAndJoinGame() async throws {
         listener?.remove()
         
-        // "waiting"状態のゲームを検索
         let query = db.collection("games")
             .whereField("status", isEqualTo: GameStatus.waiting.rawValue)
             .limit(to: 1)
         
-        query.getDocuments { [weak self] snapshot, error in
-            guard let self = self, let documents = snapshot?.documents, !documents.isEmpty else {
-                // 待機中のゲームがない場合は、新しいゲームを作成する
-                print("No waiting games found. Creating a new one.")
-                self?.createNewGame()
-                return
-            }
+        let snapshot = try await query.getDocuments()
+        
+        do {
+            let snapshot = try await query.getDocuments()
             
-            // 待機中のゲームが見つかった場合
-            if let gameToJoin = try? documents.first?.data(as: GameSession.self) {
-                print("Found a game to join: \(gameToJoin.id ?? "N/A")")
-                self.joinGame(gameToJoin)
+            if let gameToJoinDoc = snapshot.documents.first {
+                // 待機中のゲームに参加
+                let gameToJoin = try gameToJoinDoc.data(as: GameSession.self)
+                try await joinGame(gameToJoin)
+            } else {
+                // 待機中のゲームがなければ新規作成
+                try await createNewGame()
             }
-        }
-    }
+        }catch{
+                // ▼▼▼【ここから修正】ネットワークエラーなどをキャッチして独自エラーをスローする ▼▼▼
+                print("Error finding game: \(error.localizedDescription)")
+                throw GameError.networkError(error)
+                // ▲▲▲ 修正ここまで ▲▲▲
+            }
+            }
 
-    /// 新しいゲームセッションを作成し、待機状態に入ります。
-    private func createNewGame() {
+    private func createNewGame() async throws {
         let initialBoard = Array(repeating: "empty", count: 25)
         
+        // ▼▼▼【修正点】`createdAt` を初期化時に追加 ▼▼▼
         let newGame = GameSession(
             board: initialBoard,
             hostPlayerID: self.currentUserID,
-            guestPlayerID: nil,
             hostPlayerName: self.currentUserName,
-            guestPlayerName: nil,
             status: .waiting,
             currentPlayerTurn: .host,
-            winner: nil,
-            createdAt: Timestamp()
+            createdAt: Timestamp() // 現在時刻を追加
         )
-        
-        do {
-            let newDocument = try db.collection("games").addDocument(from: newGame)
-            print("New game created with ID: \(newDocument.documentID)")
-            // 作成したゲームの変更を監視開始
-            self.listenForGameChanges(gameID: newDocument.documentID)
-        } catch {
-            print("Error creating new game: \(error.localizedDescription)")
-        }
+        // ▲▲▲ 修正ここまで ▲▲▲
+
+        let newDocument = try db.collection("games").addDocument(from: newGame)
+        print("New game created with ID: \(newDocument.documentID)")
+        self.listenForGameChanges(gameID: newDocument.documentID)
     }
 
-    /// 既存の待機中ゲームに参加します。
-    private func joinGame(_ gameToJoin: GameSession) {
-        guard let gameID = gameToJoin.id else { return }
-        
-        // 自分の情報をゲストとして更新
+    private func joinGame(_ gameToJoin: GameSession) async throws {
+        guard let gameID = gameToJoin.id else {
+            throw GameError.gameNotFound
+        }
+
         let updateData: [String: Any] = [
             "guestPlayerID": self.currentUserID,
             "guestPlayerName": self.currentUserName,
             "status": GameStatus.in_progress.rawValue
         ]
-        
-        db.collection("games").document(gameID).updateData(updateData) { error in
-            if let error = error {
-                print("Error joining game: \(error.localizedDescription)")
-                return
-            }
+        do{
+            try await db.collection("games").document(gameID).updateData(updateData)
             print("Successfully joined game: \(gameID)")
-            // 参加したゲームの変更を監視開始
             self.listenForGameChanges(gameID: gameID)
+        }catch{
+            print("Error joining game: \(error.localizedDescription)")
+                   throw GameError.couldNotJoinGame
+        }
+    }
+
+    // MARK: - In-Game Actions (async/await version)
+
+    func updateGame(board: [String], nextTurn: PlayerTurn) async {
+        guard let gameID = game?.id else { return }
+        let updateData: [String: Any] = ["board": board, "currentPlayerTurn": nextTurn.rawValue]
+        
+        do {
+            try await db.collection("games").document(gameID).updateData(updateData)
+        } catch {
+            print("Error updating game: \(error.localizedDescription)")
+        }
+    }
+
+    func endGame(winner: PlayerTurn) async {
+        guard let gameID = game?.id else { return }
+        let updateData: [String: Any] = ["winner": winner.rawValue, "status": GameStatus.finished.rawValue]
+
+        do {
+            try await db.collection("games").document(gameID).updateData(updateData)
+        } catch {
+            print("Error ending game: \(error.localizedDescription)")
+        }
+    }
+
+    func leaveGame() async {
+        guard let gameID = game?.id else { return }
+        listener?.remove()
+        do {
+            try await db.collection("games").document(gameID).delete()
+        } catch {
+            print("Error leaving game: \(error.localizedDescription)")
         }
     }
     
-    // MARK: - Game State Listening
-    
-    /// 指定されたゲームIDのドキュメント変更をリアルタイムで監視します。
+    // MARK: - Game State Listening (変更なし)
     private func listenForGameChanges(gameID: String) {
         self.listener = db.collection("games").document(gameID).addSnapshotListener { [weak self] documentSnapshot, error in
-            guard let document = documentSnapshot else {
-                print("Error fetching document: \(error!)")
-                return
-            }
-            
+            guard let document = documentSnapshot else { return }
             do {
-                // 変更があるたびに、@Publishedのgameプロパティを更新
                 self?.game = try document.data(as: GameSession.self)
-                print("Game data updated. Status: \(self?.game?.status.rawValue ?? "N/A")")
             } catch {
                 print("Error decoding game data: \(error.localizedDescription)")
             }
         }
     }
     
-    // MARK: - Deinitialization
-    
     deinit {
-        // このクラスが破棄されるときに、リスナーを必ず解放する
         print("GameService deinitialized. Removing listener.")
         listener?.remove()
-    }
-
-        // MARK: - In-Game Actions
-        
-        /// 盤面の状態と次の手番をFirestoreに更新します。
-        func updateGame(board: [String], nextTurn: PlayerTurn) {
-            guard let gameID = game?.id else {
-                print("Error: Game ID is missing.")
-                return
-            }
-            
-            let updateData: [String: Any] = [
-                "board": board,
-                "currentPlayerTurn": nextTurn.rawValue
-            ]
-            
-            db.collection("games").document(gameID).updateData(updateData) { error in
-                if let error = error {
-                    print("Error updating game: \(error.localizedDescription)")
-                } else {
-                    print("Game successfully updated.")
-                }
-            }
-        }
-    
-    // 勝者を記録し、ゲームの状態を"finished"に更新します。
-    func endGame(winner: PlayerTurn) {
-        guard let gameID = game?.id else { return }
-        
-        let updateData: [String: Any] = [
-            "winner": winner.rawValue,
-            "status": GameStatus.finished.rawValue
-        ]
-        
-        db.collection("games").document(gameID).updateData(updateData)
-    }
-
-    /// ゲームから離脱し、データベースからゲーム情報を削除します。
-    func leaveGame() {
-        guard let gameID = game?.id else { return }
-        // 監視を停止
-        listener?.remove()
-        // ドキュメントを削除
-        db.collection("games").document(gameID).delete()
     }
 }

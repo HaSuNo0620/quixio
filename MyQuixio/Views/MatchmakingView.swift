@@ -24,8 +24,10 @@ struct MatchmakingView: View {
                                        
                                        // キャンセルボタン
                                        Button("キャンセル") {
-                                           viewModel.leaveGame() // ゲームセッションを削除
-                                           dismiss() // 前の画面に戻る
+                                           Task {
+                                                   await viewModel.leaveGame() // leaveGameをawaitで呼び出す
+                                                   dismiss()
+                                               }
                                        }
                                        .padding(.top, 40)
                                        .tint(.red)
@@ -47,7 +49,7 @@ struct MatchmakingView: View {
             } else {
                 Text("オンライン対戦").font(.largeTitle)
                 Button("対戦相手を探す") {
-                    viewModel.startMatchmaking()
+                    viewModel.startMatchmaking() // こちらは内部でTaskを起動するので変更なし
                 }
                 .buttonStyle(.borderedProminent).padding()
             }
@@ -56,6 +58,14 @@ struct MatchmakingView: View {
         .onDisappear(perform: stopTimer) // Viewが閉じられたらタイマー停止
         .navigationTitle("マッチメイキング")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("エラー", isPresented: $viewModel.showErrorAlert) {
+            Button("OK") {
+                // アラートを閉じる
+                viewModel.showErrorAlert = false
+            }
+        } message: {
+            Text(viewModel.errorMessage)
+        }
     }
     private func startTimer() {
            // 0.1秒ごとにelapsedTimeを更新するタイマー

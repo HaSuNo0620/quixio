@@ -7,6 +7,8 @@ import FirebaseFirestore
 struct GameSession: Codable, Identifiable {
     @DocumentID var id: String? // FirestoreのドキュメントIDを自動でマッピング
     
+    
+    
     var board: [String] // "empty", "circle", "cross" のような文字列で管理
     
     let hostPlayerID: String
