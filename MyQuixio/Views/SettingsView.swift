@@ -8,6 +8,7 @@ struct SettingsView: View {
     
     // このビューを閉じるための環境変数
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var themeManager: ThemeManager
     
     var body: some View {
         Form {
@@ -21,6 +22,24 @@ struct SettingsView: View {
                             }
                         }
                     }
+            // 👇 テーマ選択セクションを追加
+                        Section(header: Text("テーマ")) {
+                            ForEach(Theme.allThemes) { theme in
+                                HStack {
+                                    Text(theme.name)
+                                    Spacer()
+                                    if themeManager.currentTheme.id == theme.id {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(theme.accentColor) // テーマの色をチェックマークに反映
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    // タップされたらテーマを適用
+                                    themeManager.applyTheme(theme)
+                                }
+                            }
+                        }
                 }
         .navigationTitle("設定")
             .toolbar { // ◀️ ここから追加

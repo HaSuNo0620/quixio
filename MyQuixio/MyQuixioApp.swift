@@ -11,6 +11,9 @@ import FirebaseCore
 @main
 struct MyQuixioApp: App {
     
+    // 👇 ThemeManagerのインスタンスを生成
+    @StateObject var themeManager = ThemeManager()
+    
     // 👇 このinit()メソッドを追加
     init() {
         FirebaseApp.configure()
@@ -22,6 +25,8 @@ struct MyQuixioApp: App {
                 NavigationStack {
                     MainMenuView()
                 }
+                // 👇 すべてのViewでthemeManagerを使えるようにする
+                .environmentObject(themeManager)
             }
         }
 }

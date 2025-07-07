@@ -3,6 +3,9 @@
 import SwiftUI
 
 struct CellView: View {
+    
+    @EnvironmentObject var themeManager: ThemeManager
+    
     let piece: Piece
     let isSelected: Bool
     let onTap: () -> Void
@@ -10,7 +13,7 @@ struct CellView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color("CellColor"))
+                .fill(themeManager.currentTheme.cellColor)
                 .shadow(color: .black.opacity(0.1), radius: 3, x: 2, y: 2)
 
             switch piece {
@@ -21,7 +24,7 @@ struct CellView: View {
                     .resizable()
                     .fontWeight(.semibold)
                     .padding(20)
-                    .foregroundColor(player == .circle ? Color("CircleColor") : Color("CrossColor"))
+                    .foregroundColor(player == .circle ? Color(themeManager.currentTheme.circleColor) : Color(themeManager.currentTheme.crossColor))
             }
         }
         .aspectRatio(1, contentMode: .fit)

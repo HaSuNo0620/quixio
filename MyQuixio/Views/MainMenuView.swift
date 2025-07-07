@@ -3,6 +3,8 @@
 import SwiftUI
 
 struct MainMenuView: View {
+    
+    @EnvironmentObject var themeManager: ThemeManager
     // このメインメニューが、アプリ全体のViewModelを所有・管理する
     @StateObject private var viewModel = GameViewModel()
     @AppStorage("hasSeenTutorial") private var hasSeenTutorial = false
@@ -16,9 +18,13 @@ struct MainMenuView: View {
                 VStack(spacing: 30) {
                     Spacer()
                     
+                    Image("game_icon") // 作成したアイコン画像
+                        .resizable()
+                        .frame(width: 60, height: 60)
+                    
                     Text("Quixio")
-                        .font(.system(size: 60, weight: .heavy, design: .rounded))
-                        .foregroundColor(Color("TextColor"))
+                        .customFont(.extrabold, size: 60)
+                        .foregroundColor(themeManager.currentTheme.textColor)
                     
                     Spacer()
                     
@@ -27,10 +33,10 @@ struct MainMenuView: View {
                         GameSetupView(viewModel: viewModel)
                     } label: {
                         Text("Play Game")
-                            .font(.system(.title, design: .rounded).bold())
+                            .customFont(.bold, size: 20)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color("AccentColor"))
+                            .background(themeManager.currentTheme.accentColor)
                             .foregroundColor(.white)
                             .cornerRadius(20)
                     }
@@ -38,7 +44,7 @@ struct MainMenuView: View {
                     NavigationLink{ MatchmakingView()
                     } label:{
                         Text("オンライン対戦")
-                            .font(.system(.title, design: .rounded).bold())
+                            .customFont(.bold, size: 20)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .frame(maxWidth: .infinity)
@@ -50,22 +56,22 @@ struct MainMenuView: View {
                     Button("チュートリアル") {
                         isShowingTutorial = true
                     }
-                    .font(.system(.title, design: .rounded).bold())
+                    .customFont(.bold, size: 20)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color("BoardBackground"))
-                    .foregroundColor(Color("TextColor"))
+                    .background(themeManager.currentTheme.boardBackgroundColor)
+                    .foregroundColor(themeManager.currentTheme.textColor)
                     .cornerRadius(20)
                     // 設定ボタン
                     Button {
                         isShowingSettings = true
                     } label: {
                         Text("Settings")
-                            .font(.system(.title, design: .rounded).bold())
+                            .customFont(.bold, size: 20)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color("BoardBackground"))
-                            .foregroundColor(Color("TextColor"))
+                            .background(themeManager.currentTheme.boardBackgroundColor)
+                            .foregroundColor(themeManager.currentTheme.textColor)
                             .cornerRadius(20)
                     }
                     

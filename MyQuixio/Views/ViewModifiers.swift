@@ -23,3 +23,21 @@ extension View {
         self.modifier(ShakeEffect(times: CGFloat(times)))
     }
 }
+
+struct FlipAnimationModifier: ViewModifier {
+    var isFlipped: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .rotation3DEffect(
+                .degrees(isFlipped ? 180 : 0),
+                axis: (x: 0.0, y: 1.0, z: 0.0) // Y軸を中心に回転
+            )
+    }
+}
+
+extension View {
+    func flip(isFlipped: Bool) -> some View {
+        self.modifier(FlipAnimationModifier(isFlipped: isFlipped))
+    }
+}

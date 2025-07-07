@@ -4,16 +4,20 @@ import SwiftUI
 
 struct ContentView: View {
     
-    // 一人プレイ専用のViewModelを、自分自身で生成・管理する
-    @StateObject private var viewModel = GameViewModel()
+    // このViewが一人プレイ用の「頭脳」を所有・管理する
+    @ObservedObject var viewModel: GameViewModel
+    // 👇 環境オブジェクトとしてThemeManagerを受け取る
+    @EnvironmentObject var themeManager: ThemeManager
     
+    // Viewの状態を管理する変数
     @State private var isShowingResetAlert = false
     @State private var isShowingSettings: Bool = false
     @State private var invalidAttempts: Int = 0
 
     var body: some View {
         ZStack {
-            Color("AppBackground").ignoresSafeArea()
+            themeManager.currentTheme.backgroundColor.ignoresSafeArea()
+            
             VStack(spacing: 10) {
                 Spacer()
                 
@@ -26,8 +30,9 @@ struct ContentView: View {
                     .frame(height: 50)
                     .id("turnIndicator_" + viewModel.turnIndicatorText)
 
+                // 盤面表示
                 GameBoardView(
-                    board: viewModel.board, // GameViewModelが持つBindingを渡す
+                    board: viewModel.board,
                     selectedCoordinate: $viewModel.selectedCoordinate,
                     onTapCell: { row, col in
                         viewModel.handleTap(onRow: row, col: col)
@@ -42,6 +47,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
+                // ゲームリセットボタン
                 Button {
                     isShowingResetAlert = true
                 } label: {
@@ -53,7 +59,7 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .padding()
                     .frame(maxWidth: .infinity)
-                    .background(Color("AccentColor"))
+                    .background(themeManager.currentTheme.accentColor)
                     .cornerRadius(12)
                     .shadow(radius: 5, y: 3)
                 }
@@ -75,19 +81,58 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isShowingSettings) {
                 NavigationView {
-                    // GameViewModelを渡す
                     SettingsView(viewModel: viewModel)
                 }
             }
                 
+            // --- 👇 ここからが書き直す部分(1) ---
             // 勝利画面
             if let winner = viewModel.winner {
-                // (ここのコードは変更なし)
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+                    .ignoresSafeArea()
+                    .transition(.opacity.animation(.easeIn))
+
+                VStack(spacing: 20) {
+                    Text("WINNER!")
+                        .font(.system(size: 50, weight: .heavy, design: .rounded))
+                    Image(systemName: winner == .circle ? "circle.fill" : "xmark")
+                        .resizable()
+                        .fontWeight(.bold)
+                        .frame(width: 70, height: 70)
+                        .foregroundColor(winner == .circle ? Color("CircleColor") : Color("CrossColor"))
+                        .shadow(radius: 5)
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            viewModel.resetGame()
+                        }
+                    } label: {
+                        Text("Play Again")
+                            .font(.system(.title3, design: .rounded).bold())
+                            .padding(.horizontal, 40)
+                            .padding(.vertical, 15)
+                            .background(Color("AccentColor"))
+                            .foregroundColor(.white)
+                            .clipShape(Capsule())
+                            .shadow(radius: 5)
+                    }
+                    .padding(.top, 30)
+                }
+                .padding(40)
+                .background(.regularMaterial)
+                .cornerRadius(25)
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
             
+            // --- 👇 ここからが書き直す部分(2) ---
             // AI思考中インジケーター
             if viewModel.isAITurn {
-                // (ここのコードは変更なし)
+                Color.black.opacity(0.2)
+                    .ignoresSafeArea()
+                ProgressView()
+                    .scaleEffect(2)
+                    .tint(.white)
             }
         }
         .alert("ゲームをリセット", isPresented: $isShowingResetAlert) {
@@ -105,6 +150,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    // ContentView自身がViewModelを持つので、引数は不要
-    ContentView()
+    ContentView(viewModel: GameViewModel())
 }
