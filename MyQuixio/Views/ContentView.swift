@@ -55,7 +55,7 @@ struct ContentView: View {
                         Image(systemName: "arrow.counterclockwise.circle")
                         Text("ゲームをリセット")
                     }
-                    .font(.headline)
+                    .customFont(.medium, size: 20)
                     .foregroundColor(.white)
                     .padding()
                     .frame(maxWidth: .infinity)
@@ -95,7 +95,7 @@ struct ContentView: View {
 
                 VStack(spacing: 20) {
                     Text("WINNER!")
-                        .font(.system(size: 50, weight: .heavy, design: .rounded))
+                        .customFont(.extrabold, size: 60)
                     Image(systemName: winner == .circle ? "circle.fill" : "xmark")
                         .resizable()
                         .fontWeight(.bold)

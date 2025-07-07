@@ -4,13 +4,13 @@ import SwiftUI
 
 // フォント名をenumで管理すると、タイプミスを防げる
 enum CustomFont: String {
-    case bold = "MPLUSRounded1c-Bold"
-    case regular = "MPLUSRounded1c-Regular"
-    case medium = "MPLUSRounded1c-Medium"
-    case light = "MPLUSRounded1c-Light"
-    case thin = "MPLUSRounded1c-Thin"
-    case black = "MPLUSRounded1c-Black"
-    case extrabold = "MPLUSRounded1c-ExtraBold"
+    case bold = "RoundedMplus1c-Bold"
+    case regular = "RoundedMplus1c-Regular"
+    case medium = "RoundedMplus1c-Medium"
+    case light = "RoundedMplus1c-Light"
+    case thin = "RoundedMplus1c-Thin"
+    case black = "RoundedMplus1c-Black"
+    case extrabold = "RoundedMplus1c-ExtraBold"
     // 他のウェイトも追加可能
 }
 

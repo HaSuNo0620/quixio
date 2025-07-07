@@ -18,11 +18,7 @@ struct MainMenuView: View {
                 VStack(spacing: 30) {
                     Spacer()
                     
-                    Image("game_icon") // 作成したアイコン画像
-                        .resizable()
-                        .frame(width: 60, height: 60)
-                    
-                    Text("Quixio")
+                    Text("QUIXIO")
                         .customFont(.extrabold, size: 60)
                         .foregroundColor(themeManager.currentTheme.textColor)
                     

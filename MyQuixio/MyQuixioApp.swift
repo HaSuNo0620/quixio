@@ -18,6 +18,14 @@ struct MyQuixioApp: App {
     init() {
         FirebaseApp.configure()
         print("Firebase configured!")
+        
+        // --- 👇 ここからデバッグコードを追加 ---
+        print("---------- 利用可能なフォント一覧 ----------")
+        for family in UIFont.familyNames.sorted() {
+            let names = UIFont.fontNames(forFamilyName: family)
+            print("Family: \(family) | Font Names: \(names)")
+        }
+        print("--------------------------------------")
     }
     var body: some Scene {
             WindowGroup {

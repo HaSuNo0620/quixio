@@ -13,10 +13,13 @@ struct GameSetupView: View {
                 // 👇 @Stateではなく、viewModelのプロパティに直接バインディングする
                 Picker("モード", selection: $viewModel.gameMode) {
                     Label("vs AI", systemImage: "desktopcomputer").tag(GameMode.vsAI)
+                        .customFont(.medium, size: 17)
                     Label("vs 人間", systemImage: "person.2").tag(GameMode.vsHuman)
+                        .customFont(.medium, size: 17)
                 }
                 .pickerStyle(.segmented)
-            }
+                .customFont(.medium, size: 17)
+            }.customFont(.medium, size: 17)
 
             // MARK: - AIの強さの選択
             // 👇 viewModelの状態で表示を切り替える
@@ -29,7 +32,9 @@ struct GameSetupView: View {
                     }
                     .pickerStyle(.inline) // より選択しやすいスタイルに変更
                     .labelsHidden() // Pickerのラベルは不要なので隠す
+                    
                 }
+                .customFont(.medium,size: 17)
             }
             
             // MARK: - ゲーム開始ボタン
@@ -39,7 +44,7 @@ struct GameSetupView: View {
                     HStack {
                         Spacer()
                         Text("ゲーム開始")
-                            .font(.headline.bold())
+                            .customFont(.bold, size: 17)
                         Spacer()
                     }
                 }
