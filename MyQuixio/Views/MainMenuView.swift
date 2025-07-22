@@ -1,109 +1,84 @@
-// MARK: - MainMenuView.swift
-
 import SwiftUI
 
 struct MainMenuView: View {
-    
     @EnvironmentObject var themeManager: ThemeManager
-    // このメインメニューが、アプリ全体のViewModelを所有・管理する
-    @StateObject private var viewModel = GameViewModel()
-    @AppStorage("hasSeenTutorial") private var hasSeenTutorial = false
     @State private var isShowingTutorial = false
     @State private var isShowingSettings = false
-    
+
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color("AppBackground").edgesIgnoringSafeArea(.all)
-                VStack(spacing: 30) {
-                    Spacer()
-                    
-                    Text("QUIXIO")
-                        .customFont(.extrabold, size: 60)
-                        .foregroundColor(themeManager.currentTheme.textColor)
-                    
-                    Spacer()
-                    
-                    // ゲーム開始ボタン
-                    NavigationLink {
-                        GameSetupView(viewModel: viewModel)
-                    } label: {
-                        Text("Play Game")
-                            .customFont(.bold, size: 20)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(themeManager.currentTheme.accentColor)
-                            .foregroundColor(.white)
-                            .cornerRadius(20)
-                    }
-                    
-                    NavigationLink{ MatchmakingView()
-                    } label:{
-                        Text("オンライン対戦")
-                            .customFont(.bold, size: 20)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(20)
-                    }
-                    
-                    Button("チュートリアル") {
-                        isShowingTutorial = true
-                    }
-                    .customFont(.bold, size: 20)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(themeManager.currentTheme.boardBackgroundColor)
-                    .foregroundColor(themeManager.currentTheme.textColor)
-                    .cornerRadius(20)
-                    // 設定ボタン
-                    Button {
-                        isShowingSettings = true
-                    } label: {
-                        Text("Settings")
-                            .customFont(.bold, size: 20)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(themeManager.currentTheme.boardBackgroundColor)
-                            .foregroundColor(themeManager.currentTheme.textColor)
-                            .cornerRadius(20)
-                    }
-                    
-                    Spacer()
-                }
-                .onAppear {
-                    if !hasSeenTutorial {
-                        // まだチュートリアルを見ていない場合、表示準備
-                        isShowingTutorial = true
-                    }
-                }
-                .padding(40)
-                .sheet(isPresented: $isShowingTutorial, onDismiss: {
-                    // シートが閉じられたら、「見た」という記録を残す
-                    hasSeenTutorial = true
-                }) {
-                    // 表示するシートの内容
-                    TutorialView()
-                }
-                .sheet(isPresented: $isShowingSettings) {
-                    // 設定画面をそれ自身のNavigationViewで囲む
-                    NavigationView {
-                        SettingsView(viewModel: viewModel)
-                    }}
+        VStack(spacing: 20) {
+            Spacer()
+
+            // --- タイトル ---
+            VStack {
+                Text("Quixio")
+                    .customFont(.black, size: 64)
+                Text("究極の戦略ボードゲーム")
+                    .customFont(.medium, size: 18)
             }
+            .foregroundColor(themeManager.currentTheme.accentColor)
+
+            Spacer()
+
+            // --- メインボタン ---
+            // vs AI
+            NavigationLink(destination: GameSetupView(viewModel: GameViewModel())) {
+                Label("vs AI", systemImage: "person.fill")
+                    .customFont(.bold, size: 22)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(themeManager.currentTheme.accentColor)
+                    .foregroundColor(themeManager.currentTheme.backgroundColor)
+                    .cornerRadius(16)
+                    .shadow(radius: 4, y: 4)
+            }
+
+            // vs 人
+            NavigationLink(destination: HumanOpponentSelectionView()) {
+                Label("vs 人", systemImage: "person.2.fill")
+                    .customFont(.bold, size: 22)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(themeManager.currentTheme.accentColor.opacity(0.8)) // 少しスタイルを変える
+                    .foregroundColor(themeManager.currentTheme.backgroundColor)
+                    .cornerRadius(16)
+                    .shadow(radius: 4, y: 4)
+            }
+
+            Spacer()
+
+            // --- 設定などのボタン ---
+            HStack(spacing: 30) {
+                Button(action: { isShowingTutorial.toggle() }) {
+                    Label("遊び方", systemImage: "info.circle.fill")
+                        .customFont(.bold, size: 16)
+                }
+                
+                Button(action: { isShowingSettings.toggle() }) {
+                    Label("設定", systemImage: "gearshape.fill")
+                        .customFont(.bold, size: 16)
+                }
+            }
+            .foregroundColor(themeManager.currentTheme.accentColor.opacity(0.8))
+            .padding(.bottom)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
+        .sheet(isPresented: $isShowingTutorial) {
+            TutorialView()
+                .environmentObject(themeManager)
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
+                .environmentObject(themeManager)
         }
     }
-    
 }
-#Preview {
-    // プレビュー用に、シートを表示するための仮の親Viewを用意する
-    VStack {
-        Text("チュートリアルのプレビュー")
-    }
-    .sheet(isPresented: .constant(true)) {
-        // isPresentedに.constant(true)を渡すことで、プレビューでは常にシートが表示された状態になる
-        TutorialView()
+
+struct MainMenuView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainMenuView()
+            .environmentObject(ThemeManager.shared)
     }
 }

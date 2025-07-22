@@ -5,59 +5,63 @@ import SwiftUI
 struct GameSetupView: View {
     // 前の画面(MainMenuView)からViewModelを受け取る
     @ObservedObject var viewModel: GameViewModel
+    @EnvironmentObject var themeManager: ThemeManager
+    
+    @State private var isGameActive = false
+
+    // GameSetupView.swift の body の中身を置き換え
 
     var body: some View {
-        Form {
-            // MARK: - 対戦相手の選択
-            Section(header: Text("対戦相手を選ぶ")) {
-                // 👇 @Stateではなく、viewModelのプロパティに直接バインディングする
-                Picker("モード", selection: $viewModel.gameMode) {
-                    Label("vs AI", systemImage: "desktopcomputer").tag(GameMode.vsAI)
-                        .customFont(.medium, size: 17)
-                    Label("vs 人間", systemImage: "person.2").tag(GameMode.vsHuman)
-                        .customFont(.medium, size: 17)
-                }
-                .pickerStyle(.segmented)
-                .customFont(.medium, size: 17)
-            }.customFont(.medium, size: 17)
-
-            // MARK: - AIの強さの選択
-            // 👇 viewModelの状態で表示を切り替える
-            if viewModel.gameMode == .vsAI {
-                Section(header: Text("AIの強さ")) {
-                    Picker("AIの強さ", selection: $viewModel.aiLevel) {
-                        ForEach(AILevel.allCases, id: \.self) { level in
-                            Text(level.rawValue).tag(level)
+        VStack(spacing: 20) {
+            Text("AIの強さを選択")
+                .customFont(.bold, size: 28)
+                .foregroundColor(themeManager.currentTheme.textColor)
+                .padding(.bottom, 40)
+            
+            // --- AIレベル選択ボタン ---
+            ForEach(AILevel.allCases, id: \.self) { level in
+                Button(action: {
+                    viewModel.aiLevel = level
+                }) {
+                    HStack {
+                        Image(systemName: level.iconName)
+                            .font(.title)
+                            .frame(width: 40)
+                        
+                        VStack(alignment: .leading) {
+                            Text(level.rawValue)
+                                .customFont(.bold, size: 18)
+                            // ここに各レベルの説明文などを追加しても良い
                         }
+                        Spacer()
                     }
-                    .pickerStyle(.inline) // より選択しやすいスタイルに変更
-                    .labelsHidden() // Pickerのラベルは不要なので隠す
-                    
+                    .padding()
+                    .background(themeManager.currentTheme.accentColor.opacity(viewModel.aiLevel == level ? 0.2 : 0.1))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(viewModel.aiLevel == level ? themeManager.currentTheme.accentColor : Color.clear, lineWidth: 2)
+                    )
                 }
-                .customFont(.medium,size: 17)
+                .buttonStyle(.plain) // ボタンのデフォルトスタイルを無効化して、カスタムスタイルを全面に適用
+                .foregroundColor(themeManager.currentTheme.textColor)
             }
             
-            // MARK: - ゲーム開始ボタン
-            Section {
-                // 👇 NavigationLinkの.onAppearを削除し、シンプルにする
-                NavigationLink(destination: ContentView(viewModel: viewModel)) {
-                    HStack {
-                        Spacer()
-                        Text("ゲーム開始")
-                            .customFont(.bold, size: 17)
-                        Spacer()
-                    }
-                }
-                .foregroundColor(Color("AccentColor"))
+            Spacer()
+            
+            // --- ゲーム開始ボタン ---
+            NavigationLink(destination: ContentView(viewModel: viewModel), isActive: $isGameActive) { EmptyView() }
+            
+            Button("ゲーム開始") {
+                self.isGameActive = true
             }
+            .buttonStyle(PrimaryButtonStyle()) // 以前作成したボタンスタイルを適用
+            
         }
-        .navigationTitle("ゲーム設定")
-        .background(Color("AppBackground").ignoresSafeArea())
-        .scrollContentBackground(.hidden)
-        .onAppear {
-            // この画面が表示されたら、必ずゲームをリセットする
-            viewModel.resetGame()
-        }
+        .padding()
+        .navigationTitle("AI対戦設定")
+        .navigationBarTitleDisplayMode(.inline)
+        .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
     }
 }
 

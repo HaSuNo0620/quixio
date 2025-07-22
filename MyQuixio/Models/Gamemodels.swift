@@ -17,10 +17,22 @@ enum GameMode {
     case vsAI
 }
 // CaseIterable を追加
-enum AILevel: String, CaseIterable, Identifiable {
-    case easy = "Easy (ランダム)"
-    case normal = "Normal (攻防一体)"
-    case hard = "Hard (先読み)"
+enum AILevel: String, CaseIterable, Codable {
+    case easy = "Easy"
+    case medium = "Medium"
+    case hard = "Hard"
     
-    var id: String { self.rawValue }
+    // ▼▼▼【ここから追加】▼▼▼
+    // 各レベルに対応するアイコン名を定義
+    var iconName: String {
+        switch self {
+        case .easy:
+            return "tortoise.fill" // 亀（簡単）
+        case .medium:
+            return "figure.walk" // 人（普通）
+        case .hard:
+            return "brain.head.profile" // 脳（難しい）
+        }
+    }
+    // ▲▲▲ 追加ここまで ▲▲▲
 }

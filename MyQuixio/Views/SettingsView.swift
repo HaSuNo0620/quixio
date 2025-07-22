@@ -1,53 +1,51 @@
-// MARK: - SettingsView.swift
-
 import SwiftUI
 
 struct SettingsView: View {
-    // ContentViewからViewModelを受け取るためのプロパティ
-    @ObservedObject var viewModel: GameViewModel
-    
-    // このビューを閉じるための環境変数
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var themeManager: ThemeManager
-    
+    @StateObject private var soundManager = SoundManager.shared
+
     var body: some View {
-        Form {
-                    // headerとfooterを両方()の中に記述します
-                    Section(header: Text("サウンド設定"), footer: Text("アプリ内の効果音のオン/オフを切り替えます。")) {
-                        Toggle(isOn: $viewModel.isSoundEnabled) {
+        NavigationView {
+            Form {
+                Section(header: Text("サウンド設定")) {
+                    Toggle("サウンド", isOn: $soundManager.isSoundEnabled)
+                }
+                Section(header: Text("テーマ")) {
+                    ForEach(Theme.allThemes) { theme in
+                        Button(action: {
+                            themeManager.applyTheme(theme)
+                        }) {
                             HStack {
-                                Image(systemName: "speaker.wave.2.fill")
-                                    .foregroundColor(Color("AccentColor"))
-                                Text("サウンドエフェクト")
+                                Text(theme.name)
+                                Spacer()
+                                if themeManager.currentTheme == theme {
+                                    Image(systemName: "checkmark")
+                                }
                             }
+                            .foregroundColor(themeManager.currentTheme.textColor)
                         }
                     }
-            // 👇 テーマ選択セクションを追加
-                        Section(header: Text("テーマ")) {
-                            ForEach(Theme.allThemes) { theme in
-                                HStack {
-                                    Text(theme.name)
-                                    Spacer()
-                                    if themeManager.currentTheme.id == theme.id {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(theme.accentColor) // テーマの色をチェックマークに反映
-                                    }
-                                }
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    // タップされたらテーマを適用
-                                    themeManager.applyTheme(theme)
-                                }
-                            }
-                        }
                 }
-        .navigationTitle("設定")
-            .toolbar { // ◀️ ここから追加
+            }
+            .navigationTitle("設定")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("完了") {
-                        dismiss() // ◀️ ボタンが押されたらViewを閉じる
+                        dismiss()
                     }
                 }
-            } // ◀️ ここまで追加
+            }
+        }
+        .tint(themeManager.currentTheme.accentColor)
+    }
+}
+
+struct SettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        // ★この呼び出しが正しく動作するようになります★
+        SettingsView()
+            .environmentObject(ThemeManager.shared)
     }
 }

@@ -8,10 +8,12 @@ struct ContentView: View {
     @ObservedObject var viewModel: GameViewModel
     // 👇 環境オブジェクトとしてThemeManagerを受け取る
     @EnvironmentObject var themeManager: ThemeManager
+    @Environment(\.presentationMode) var presentationMode
     
     // Viewの状態を管理する変数
     @State private var isShowingResetAlert = false
     @State private var isShowingSettings: Bool = false
+    @State private var isShowingTutorial = false
     @State private var invalidAttempts: Int = 0
 
     var body: some View {
@@ -81,7 +83,7 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isShowingSettings) {
                 NavigationView {
-                    SettingsView(viewModel: viewModel)
+                    SettingsView()
                 }
             }
                 
@@ -135,6 +137,44 @@ struct ContentView: View {
                     .tint(.white)
             }
         }
+        .navigationBarBackButtonHidden(true)
+                // ▼▼▼【2. ツールバーを追加・修正】▼▼▼
+                .toolbar {
+                    // ★ヘルプボタンを追加
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            isShowingTutorial.toggle()
+                        } label: {
+                            Image(systemName: "questionmark.circle.fill")
+                                .foregroundColor(themeManager.currentTheme.accentColor)
+                        }
+                    }
+                    
+                    // ★メインメニューに戻るボタン
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button {
+                            presentationMode.wrappedValue.dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left.circle.fill")
+                                .foregroundColor(themeManager.currentTheme.accentColor)
+                        }
+                        .padding(.leading, 8) // 少しだけ間隔を調整
+                    }
+                }
+                // ▼▼▼【3. シートを追加】▼▼▼
+                .sheet(isPresented: $isShowingTutorial) {
+                    TutorialView()
+                        .environmentObject(themeManager) // テーマを渡す
+                }
+                .sheet(isPresented: $isShowingSettings) {
+                    SettingsView()
+                        .environmentObject(themeManager)
+                }
+                .onReceive(viewModel.$winner) { winner in
+                    if winner != nil {
+                        SoundManager.shared.playSound(named: "win.mp3")
+                    }
+                }
         .alert("ゲームをリセット", isPresented: $isShowingResetAlert) {
             Button("リセットする", role: .destructive) { viewModel.resetGame() }
             Button("キャンセル", role: .cancel) { }

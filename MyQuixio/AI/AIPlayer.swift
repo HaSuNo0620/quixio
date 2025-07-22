@@ -30,7 +30,7 @@ class AIPlayer {
         switch level {
         case .easy:
             return findRandomMove(board: board)
-        case .normal:
+        case .medium:
             return findNormalMove(board: board)
         case .hard:
             return findHardMove(board: board)

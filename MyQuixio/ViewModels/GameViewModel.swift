@@ -15,8 +15,8 @@ class GameViewModel: ObservableObject {
     @Published var gameMode: GameMode = .vsAI
     @Published var isAITurn: Bool = false
     @Published var winningLine: [(row: Int, col: Int)]? = nil
-    @Published var aiLevel: AILevel = .normal
-    @Published var isSoundEnabled: Bool = true
+    @Published var aiLevel: AILevel = .medium
+//    @Published var isSoundEnabled: Bool = true
     
     private let aiPlayer = AIPlayer()
     
@@ -40,12 +40,14 @@ class GameViewModel: ObservableObject {
                 }
             }
             guard self.isPeripheral(row: row, column: column) && canSelect else {
-                playSound(named: "error.mp3")
+                SoundManager.shared.playSound(named: "error.mp3")
+//                playSound(named: "error.mp3")
                 HapticManager.shared.playImpact(style: .light)
                 invalidMovePublisher.send()
                 return
             }
-            playSound(named: "tap.mp3")
+            SoundManager.shared.playSound(named: "tap.mp3")
+//            playSound(named: "tap.mp3")
             HapticManager.shared.playImpact(style: .medium)
             self.selectedCoordinate = (row: row, col: column)
         } else {
@@ -68,7 +70,8 @@ class GameViewModel: ObservableObject {
                 executeMove(from: source, to: destination)
                 self.selectedCoordinate = nil
             } else {
-                playSound(named: "error.mp3")
+                SoundManager.shared.playSound(named: "error.mp3")
+//                playSound(named: "error.mp3")
                 HapticManager.shared.playImpact(style: .light)
                 invalidMovePublisher.send()
                 self.selectedCoordinate = nil
@@ -77,7 +80,8 @@ class GameViewModel: ObservableObject {
     }
     
     func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
-        playSound(named: "slide.mp3")
+//        playSound(named: "slide.mp3")
+        SoundManager.shared.playSound(named: "slide.mp3")
         HapticManager.shared.playImpact(style: .rigid)
         
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
@@ -85,7 +89,8 @@ class GameViewModel: ObservableObject {
         }
         
         if let result = self.checkWinner() {
-            playSound(named: "win.mp3")
+            SoundManager.shared.playSound(named: "win.mp3")
+//            playSound(named: "win.mp3")
             HapticManager.shared.playNotification(type: .success)
             
             withAnimation(.easeInOut.delay(0.5)) {
@@ -125,12 +130,12 @@ class GameViewModel: ObservableObject {
     }
     
     /// サウンドを再生する専門のヘルパーメソッド
-    private func playSound(named soundName: String) {
-        // サウンドを鳴らすかどうかのチェックを、この場所に集約する
-        if isSoundEnabled {
-            SoundManager.shared.playSound(named: soundName)
-        }
-    }
+//    private func playSound(named soundName: String) {
+//        // サウンドを鳴らすかどうかのチェックを、この場所に集約する
+//        if isSoundEnabled {
+//            SoundManager.shared.playSound(named: soundName)
+//        }
+//    }
     
     // 既存のslideメソッドは、新しいメソッドを呼び出す形に書き換える
     private func slide(from: (row: Int, col: Int), to: (row: Int, col: Int)) {

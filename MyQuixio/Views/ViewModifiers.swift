@@ -41,3 +41,20 @@ extension View {
         self.modifier(FlipAnimationModifier(isFlipped: isFlipped))
     }
 }
+
+struct PrimaryButtonStyle: ButtonStyle {
+    @EnvironmentObject var themeManager: ThemeManager
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .customFont(.bold, size: 18)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(themeManager.currentTheme.accentColor)
+            .foregroundColor(themeManager.currentTheme.backgroundColor)
+            .cornerRadius(12)
+            // ボタンが押されている時に少し縮むエフェクト
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+    }
+}
