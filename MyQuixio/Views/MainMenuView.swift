@@ -22,7 +22,7 @@ struct MainMenuView: View {
 
             // --- メインボタン ---
             // vs AI
-            NavigationLink(destination: GameSetupView(viewModel: GameViewModel())) {
+            NavigationLink(destination: GameSetupView()) {
                 Label("vs AI", systemImage: "person.fill")
                     .customFont(.bold, size: 22)
                     .frame(maxWidth: .infinity)
@@ -39,7 +39,7 @@ struct MainMenuView: View {
                     .customFont(.bold, size: 22)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(themeManager.currentTheme.accentColor.opacity(0.8)) // 少しスタイルを変える
+                    .background(themeManager.currentTheme.accentColor.opacity(0.8))
                     .foregroundColor(themeManager.currentTheme.backgroundColor)
                     .cornerRadius(16)
                     .shadow(radius: 4, y: 4)

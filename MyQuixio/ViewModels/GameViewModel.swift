@@ -7,21 +7,34 @@ import Combine
 class GameViewModel: ObservableObject {
     
     // MARK: - Published Properties
-    // @Published: このプロパティが変更されたら、Viewに通知する
     @Published var board: [[Piece]] = Array(repeating: Array(repeating: .empty, count: 5), count: 5)
     @Published var currentPlayer: Player = .circle
     @Published var selectedCoordinate: (row: Int, col: Int)? = nil
     @Published var winner: Player? = nil
-    @Published var gameMode: GameMode = .vsAI
+    @Published var gameMode: GameMode
     @Published var isAITurn: Bool = false
     @Published var winningLine: [(row: Int, col: Int)]? = nil
     @Published var aiLevel: AILevel = .medium
-//    @Published var isSoundEnabled: Bool = true
     
     private let aiPlayer = AIPlayer()
     
     let invalidMovePublisher = PassthroughSubject<Void, Never>()
     
+    // MARK: - Initializer
+    
+    // vs AIモードとAIレベルを引数で受け取るイニシャライザ
+    init(gameMode: GameMode, aiLevel: AILevel) {
+        self.gameMode = gameMode
+        self.aiLevel = aiLevel
+    }
+    
+    // vs 人モード用のイニシャライザ
+    init(gameMode: GameMode) {
+        self.gameMode = gameMode
+    }
+    
+    // デフォルトのイニシャライザは廃止
+
     // MARK: - Game Logic Methods
     
     func handleTap(onRow row: Int, col column: Int) {
@@ -41,13 +54,11 @@ class GameViewModel: ObservableObject {
             }
             guard self.isPeripheral(row: row, column: column) && canSelect else {
                 SoundManager.shared.playSound(named: "error.mp3")
-//                playSound(named: "error.mp3")
                 HapticManager.shared.playImpact(style: .light)
                 invalidMovePublisher.send()
                 return
             }
             SoundManager.shared.playSound(named: "tap.mp3")
-//            playSound(named: "tap.mp3")
             HapticManager.shared.playImpact(style: .medium)
             self.selectedCoordinate = (row: row, col: column)
         } else {
@@ -71,7 +82,6 @@ class GameViewModel: ObservableObject {
                 self.selectedCoordinate = nil
             } else {
                 SoundManager.shared.playSound(named: "error.mp3")
-//                playSound(named: "error.mp3")
                 HapticManager.shared.playImpact(style: .light)
                 invalidMovePublisher.send()
                 self.selectedCoordinate = nil
@@ -80,7 +90,6 @@ class GameViewModel: ObservableObject {
     }
     
     func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
-//        playSound(named: "slide.mp3")
         SoundManager.shared.playSound(named: "slide.mp3")
         HapticManager.shared.playImpact(style: .rigid)
         
@@ -90,7 +99,6 @@ class GameViewModel: ObservableObject {
         
         if let result = self.checkWinner() {
             SoundManager.shared.playSound(named: "win.mp3")
-//            playSound(named: "win.mp3")
             HapticManager.shared.playNotification(type: .success)
             
             withAnimation(.easeInOut.delay(0.5)) {
@@ -106,9 +114,7 @@ class GameViewModel: ObservableObject {
         return row == 0 || row == 4 || column == 0 || column == 4
     }
     
-    // --- ★★★ 既存のcheckWinnerメソッドを、このコードに置き換える ★★★ ---
     private func checkWinner() -> (player: Player, line: [(row: Int, col: Int)])? {
-        // 汎用ロジックを呼び出す
         return GameLogic.checkForWinner(on: self.board) { piece in
             if case .mark(let player) = piece {
                 return player
@@ -117,8 +123,6 @@ class GameViewModel: ObservableObject {
         }
     }
 
-    
-    
     func resetGame() {
         HapticManager.shared.playImpact(style: .soft)
         
@@ -129,22 +133,12 @@ class GameViewModel: ObservableObject {
         self.winningLine = nil
     }
     
-    /// サウンドを再生する専門のヘルパーメソッド
-//    private func playSound(named soundName: String) {
-//        // サウンドを鳴らすかどうかのチェックを、この場所に集約する
-//        if isSoundEnabled {
-//            SoundManager.shared.playSound(named: soundName)
-//        }
-//    }
-    
-    // 既存のslideメソッドは、新しいメソッドを呼び出す形に書き換える
     private func slide(from: (row: Int, col: Int), to: (row: Int, col: Int)) {
         let pieceToSlide = Piece.mark(self.currentPlayer)
         self.board = GameLogic.slide(board: self.board, from: from, to: to, piece: pieceToSlide)
     }
     
     var turnIndicatorText: String {
-        // まず勝者が決まっているかチェック
         if let winner = winner {
             if gameMode == .vsAI {
                 return winner == .circle ? "あなたの勝利です！" : "AIの勝利です"
@@ -153,7 +147,6 @@ class GameViewModel: ObservableObject {
             }
         }
         
-        // AI対戦モードの場合
         if gameMode == .vsAI {
             if isAITurn {
                 return "相手（AI）が考えています..."
@@ -162,12 +155,10 @@ class GameViewModel: ObservableObject {
             }
         }
         
-        // 2人対戦モードの場合
         if gameMode == .vsHuman {
             return currentPlayer == .circle ? "◯ の番です" : "✕ の番です"
         }
         
-        // 上記のいずれにも当てはまらない場合 (念のため)
         return ""
     }
 
@@ -176,28 +167,22 @@ class GameViewModel: ObservableObject {
 
         isAITurn = true
 
-        // Taskを使って非同期処理を開始
         Task {
             do {
-                // 0.5秒間、非同期に待機します。UIはブロックされません。
                 try await Task.sleep(nanoseconds: 500_000_000)
 
-                // AIPlayerに、現在の盤面とAIレベルを渡して、最善手を計算してもらう
                 if let bestMove = self.aiPlayer.getBestMove(for: self.board, level: self.aiLevel) {
-                    // UIの更新はメインスレッドで行うことを保証
                     await MainActor.run {
                         self.executeMove(from: bestMove.source, to: bestMove.destination)
                         self.isAITurn = false
                     }
                 } else {
-                    // 万が一、手が見つからなかった場合
                     print("AI could not find a valid move.")
                     await MainActor.run {
                         self.isAITurn = false
                     }
                 }
             } catch {
-                // Taskがキャンセルされた場合のエラーハンドリング
                 print("AI thinking task was cancelled: \(error)")
                 await MainActor.run {
                     self.isAITurn = false
@@ -205,7 +190,4 @@ class GameViewModel: ObservableObject {
             }
         }
     }
-
 }
-
-

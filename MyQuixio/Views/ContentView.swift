@@ -190,5 +190,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView(viewModel: GameViewModel())
+    ContentView(viewModel: GameViewModel(gameMode: .vsAI))
 }

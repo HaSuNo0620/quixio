@@ -27,10 +27,7 @@ struct HumanOpponentSelectionView: View {
             }
 
             // オフライン対戦（1台で）
-            // TODO: この機能は将来的に実装します
-            Button(action: {
-                // ここに1台で対戦するモードへの遷移処理を書く
-            }) {
+            NavigationLink(destination: GameView(viewModel: GameViewModel(gameMode: .vsHuman))) {
                 VStack(alignment: .leading) {
                     Text("オフライン対戦 (1台で)")
                         .customFont(.bold, size: 18)
@@ -44,7 +41,6 @@ struct HumanOpponentSelectionView: View {
                 .foregroundColor(themeManager.currentTheme.textColor)
                 .cornerRadius(12)
             }
-            .disabled(true) // 未実装のため、今は無効化しておく
 
             Spacer()
         }

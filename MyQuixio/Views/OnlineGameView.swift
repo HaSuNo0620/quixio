@@ -17,13 +17,19 @@ struct OnlineGameView: View {
                     .flip(isFlipped: viewModel.game?.currentPlayerTurn != viewModel.myTurn) // 自分のターンかどうかで反転
                     .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.game?.currentPlayerTurn) // ターン変更でアニメーション
 
+                // ここで$viewModel.displayBoardではなく、viewModel.displayBoardとして渡す
                 GameBoardView(
-                    board: viewModel.displayBoard, // @Bindingではない
+                    board: viewModel.displayBoard,
                     selectedCoordinate: $viewModel.selectedCoordinate,
                     onTapCell: { row, col in
                         viewModel.handleTap(onRow: row, col: col)
                     }
                 )
+                .onAppear {
+                    // OnlineGameViewのonAppearでFirebaseとの同期を開始する
+                    viewModel.startMatchmaking()
+                }
+                
                 Spacer()
             }
             .padding()
@@ -32,6 +38,9 @@ struct OnlineGameView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("対戦をやめる") { dismiss() }
                 }
+            }
+            .alert(isPresented: $viewModel.showErrorAlert) {
+                Alert(title: Text("エラー"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("OK")))
             }
         }
     }

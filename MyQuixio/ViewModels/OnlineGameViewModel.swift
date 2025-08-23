@@ -61,35 +61,86 @@ class OnlineGameViewModel: ObservableObject {
         }
         
         if selectedCoordinate == nil {
-            // TODO: 一人プレイ用のViewModelから、駒を選択できるかのチェックロジックを後で持ってくる
+            let piece = self.displayBoard[row][col]
+            var canSelect = false
+            switch piece {
+            case .empty:
+                canSelect = true
+            case .mark(let owner):
+                let myPlayer: Player = (myTurn == .host) ? .circle : .cross
+                if owner == myPlayer {
+                    canSelect = true
+                }
+            }
+            // 盤面の周辺部でなければ選択できない
+            guard self.isPeripheral(row: row, col: col) && canSelect else {
+                print("Invalid selection.")
+                return
+            }
             print("Selected piece at (\(row), \(col))")
             selectedCoordinate = (row, col)
         } else {
             guard let source = selectedCoordinate else { return }
             let destination = (row: row, col: col)
             
-            // TODO: 一人プレイ用のViewModelから、有効な移動かのチェックロジックを後で持ってくる
-            print("Executing move from \(source) to \(destination)")
-            executeMove(from: source, to: destination)
+            // 既存のGameViewModelのロジックと同様に、有効な移動かチェック
+            let isSameRow = (source.row == destination.row)
+            let isSameCol = (source.col == destination.col)
+            let isDestinationOnHorizontalEdge = (destination.col == 0 || destination.col == 4)
+            let isDestinationOnVerticalEdge = (destination.row == 0 || destination.row == 4)
+            let isValidRowMove = isSameRow && isDestinationOnHorizontalEdge
+            let isValidColMove = isSameCol && isDestinationOnVerticalEdge
             
-            selectedCoordinate = nil
+            if isValidRowMove || isValidColMove {
+                print("Executing move from \(source) to \(destination)")
+                executeMove(from: source, to: destination)
+                selectedCoordinate = nil
+            } else {
+                print("Invalid move.")
+                selectedCoordinate = nil
+            }
         }
     }
     
-    /// 盤面データをスライドさせるヘルパー関数 (GameViewModelからコピー)
-    private func slide(board: [String], from: (row: Int, col: Int), to: (row: Int, col: Int), for player: PlayerTurn) -> [String] {
-        let board2D = board.to2D()
-        let pieceToSlide = (player == .host) ? "circle" : "cross"
+    private func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
+        guard let game = game, let myTurn = myTurn else { return }
+        
+        let playerToMove: Player = (myTurn == .host) ? .circle : .cross
+        let pieceToSlide = Piece.mark(playerToMove)
+        
+        // GameLogicのslide関数を直接使用
+        let newBoard2D = GameLogic.slide(board: displayBoard, from: source, to: destination, piece: pieceToSlide)
+        let newBoard1D = newBoard2D.flatMap { $0 }.map { (piece: Piece) in
+            switch piece {
+            case .mark(.circle): return "circle"
+            case .mark(.cross): return "cross"
+            case .empty: return "empty"
+            }
+        }
 
-        let newBoard2D = GameLogic.slide(board: board2D, from: from, to: to, piece: pieceToSlide)
+        Task {
+            // GameLogicのcheckForWinnerを直接使用
+            if let result = GameLogic.checkForWinner(on: newBoard2D, playerMapping: { (piece: Piece) -> Player? in
+                if case .mark(let player) = piece {
+                    return player
+                }
+                return nil
+            }) {
+                let winnerTurn: PlayerTurn = (result.player == .circle) ? .host : .guest
+                await gameService.endGame(winner: winnerTurn)
+            } else {
+                let nextTurn: PlayerTurn = (myTurn == .host) ? .guest : .host
+                await gameService.updateGame(board: newBoard1D, nextTurn: nextTurn)
+            }
+        }
+    }
 
-        // 2Dを1Dに戻して返す
-        return newBoard2D.flatMap { $0 }
+    private func isPeripheral(row: Int, col: Int) -> Bool {
+        return row == 0 || row == 4 || col == 0 || col == 4
     }
     
     var displayBoard: [[Piece]] {
         guard let board_1d = game?.board else {
-            // ゲームがまだなければ空の盤面を返す
             return Array(repeating: Array(repeating: .empty, count: 5), count: 5)
         }
         
@@ -111,8 +162,7 @@ class OnlineGameViewModel: ObservableObject {
         }
         return board_2d
     }
-    
-    /// UI表示用のターン表示テキスト
+
     var turnIndicatorText: String {
         guard let game = game else { return "..." }
         
@@ -136,8 +186,6 @@ class OnlineGameViewModel: ObservableObject {
         }
     }
     
-    // MARK: - UI Computed Properties (ここから追加)
-    
     var isGameFinished: Bool {
         return game?.status == .finished
     }
@@ -151,56 +199,6 @@ class OnlineGameViewModel: ObservableObject {
         return "引き分けです" // 今後引き分け処理を実装する場合
     }
     
-    // ... (既存のinit, myTurn, startMatchmaking, handleTap)
-    
-    private func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
-        guard let game = game, let myTurn = myTurn else { return }
-        let newBoard = slide(board: game.board, from: source, to: destination, for: myTurn)
-
-        Task {
-            if let winner = checkForWinner(on: newBoard) {
-                await gameService.endGame(winner: winner)
-            } else {
-                let nextTurn: PlayerTurn = (myTurn == .host) ? .guest : .host
-                await gameService.updateGame(board: newBoard, nextTurn: nextTurn)
-            }
-        }
-    }
-
-    // MARK: - Game Logic Helpers (ここから追加)
-    
-    /// 盤面をチェックして勝者を判定する (GameViewModelから移植・改造)
-    private func checkForWinner(on board: [String]) -> PlayerTurn? {
-        let board2D = board.to2D() // 既存のヘルパーで2D配列に変換
-
-        // 汎用ロジックを呼び出す
-        // `String` から `Player?` へのマッピングを提供
-        let result = GameLogic.checkForWinner(on: board2D) { pieceString in
-            switch pieceString {
-            case "circle": return .circle
-            case "cross": return .cross
-            default: return nil
-            }
-        }
-        
-        // GameLogicからの結果 (Player) をこのViewModelで使うPlayerTurnに変換
-        if let winner = result?.player {
-            return winner == .circle ? .host : .guest
-        }
-        return nil
-    }
-    
-    private func checkLine(line: [String]) -> PlayerTurn? {
-        let firstPiece = line[0]
-        guard firstPiece != "empty" else { return nil }
-        
-        if line.allSatisfy({ $0 == firstPiece }) {
-            return firstPiece == "circle" ? .host : .guest
-        }
-        return nil
-    }
-    
-    // ゲーム離脱用の関数を追加
     func leaveGame() {
         Task {
             await gameService.leaveGame()

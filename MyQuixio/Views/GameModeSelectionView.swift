@@ -12,12 +12,13 @@ struct GameModeSelectionView: View {
 
             // AIと対戦
             NavigationLink {
-                GameSetupView(viewModel: GameViewModel())
+                // GameViewModelを渡さない、引数なしのGameSetupViewを呼び出す
+                GameSetupView()
             } label: {
                 Text("AIと対戦")
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(themeManager.currentTheme.accentColor) // Color.themeが使えるようになります
+                    .background(themeManager.currentTheme.accentColor)
                     .foregroundColor(themeManager.currentTheme.backgroundColor)
                     .cornerRadius(12)
             }
@@ -43,7 +44,6 @@ struct GameModeSelectionView: View {
     }
 }
 
-// プレビュー用のコードも修正
 struct GameModeSelectionView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
