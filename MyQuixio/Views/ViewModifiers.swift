@@ -61,16 +61,21 @@ struct PrimaryButtonStyle: ButtonStyle {
 
 struct MainButtonModifier: ViewModifier {
     var color: Color
+    // フォントサイズやパディングを外部から渡せるようにする
+    var fontSize: CGFloat
+    var verticalPadding: CGFloat
+    var cornerRadius: CGFloat
+
     @EnvironmentObject var themeManager: ThemeManager
 
     func body(content: Content) -> some View {
         content
-            .customFont(.bold, size: 28)
-            .frame(maxWidth: 280, minHeight: 44)
-            .padding(.vertical, 8)
+            .customFont(.bold, size: fontSize) // 引数を使用
+            .frame(maxWidth: .infinity) // 横幅は最大に広げる
+            .padding(.vertical, verticalPadding) // 引数を使用
             .background(color)
             .foregroundColor(themeManager.currentTheme.backgroundColor)
-            .cornerRadius(15)
+            .cornerRadius(cornerRadius) // 引数を使用
             .shadow(color: .black.opacity(0.2), radius: 5, y: 3)
     }
 }

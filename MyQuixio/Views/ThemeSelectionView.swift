@@ -37,12 +37,3 @@ struct ThemeSelectionView: View {
         }
     }
 }
-
-struct ThemeSelectionView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            ThemeSelectionView()
-        }
-        .environmentObject(ThemeManager())
-    }
-}

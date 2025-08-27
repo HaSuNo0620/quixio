@@ -1,65 +1,73 @@
-// MyQuixio/Views/MainMenuView.swift
-
 import SwiftUI
 
 struct MainMenuView: View {
     @EnvironmentObject var themeManager: ThemeManager
 
     var body: some View {
-        ZStack {
-            themeManager.currentTheme.backgroundColor
-                .ignoresSafeArea()
+        GeometryReader { geometry in
+            let screenWidth = geometry.size.width
+            
+            ZStack {
+                themeManager.currentTheme.backgroundColor
+                    .ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                Text("Quixio")
-                    .font(.custom("MPLUSRounded1c-Black", size: 60))
-                    .foregroundColor(themeManager.currentTheme.textColor)
-                    .padding(.bottom, 30) // タイトルとボタンの間にスペースを追加
+                VStack(spacing: screenWidth * 0.05) { // spacing
+                    Text("Quixio")
+                        // フォントサイズを画面幅の20%に
+                        .font(.custom("MPLUSRounded1c-Black", size: screenWidth * 0.2))
+                        .foregroundColor(themeManager.currentTheme.textColor)
+                        // paddingを画面幅の10%に
+                        .padding(.bottom, screenWidth * 0.1)
 
-                // --- 👇 「プレイ」ボタンを2つのボタンに置き換え ---
-                
-                // コンピュータと対戦する画面へのリンク
-                NavigationLink(destination: GameSetupView()) {
-                    Text("コンピュータと対戦")
-                        .modifier(MainButtonModifier(color: themeManager.currentTheme.accentColor))
-                }
+                    // コンピュータと対戦する画面へのリンク
+                    NavigationLink(destination: GameSetupView()) {
+                        Text("コンピュータと対戦")
+                            // 画面幅に応じて計算した値を渡す
+                            .modifier(MainButtonModifier(
+                                color: themeManager.currentTheme.accentColor,
+                                fontSize: screenWidth * 0.07,
+                                verticalPadding: screenWidth * 0.03,
+                                cornerRadius: screenWidth * 0.04
+                            ))
+                    }
 
-                // 友達と対戦する画面へのリンク
-                NavigationLink(destination: HumanOpponentSelectionView()) {
-                    Text("友達と対戦")
-                        .modifier(MainButtonModifier(color: themeManager.currentTheme.accentColor))
+                    // 友達と対戦する画面へのリンク
+                    NavigationLink(destination: HumanOpponentSelectionView()) {
+                        Text("友達と対戦")
+                            .modifier(MainButtonModifier(
+                                color: themeManager.currentTheme.accentColor,
+                                fontSize: screenWidth * 0.07,
+                                verticalPadding: screenWidth * 0.03,
+                                cornerRadius: screenWidth * 0.04
+                            ))
+                    }
+                    
+                    // チュートリアル画面へのリンク
+                    NavigationLink(destination: TutorialView()) {
+                        Text("あそびかた")
+                            .modifier(MainButtonModifier(
+                                color: themeManager.currentTheme.accentColor,
+                                fontSize: screenWidth * 0.07,
+                                verticalPadding: screenWidth * 0.03,
+                                cornerRadius: screenWidth * 0.04
+                            ))
+                    }
+                    
+                    // 設定画面へのリンク
+                    NavigationLink(destination: SettingsView()) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title)
+                            .foregroundColor(themeManager.currentTheme.accentColor)
+                            .padding(screenWidth * 0.03) // padding
+                            .background(themeManager.currentTheme.cellColor)
+                            .clipShape(Circle())
+                    }
+                    .padding(.top, screenWidth * 0.05) // padding
                 }
-                
-                // --- 👆 ここまでが変更点 ---
-
-                // チュートリアル画面へのリンク
-                NavigationLink(destination: TutorialView()) {
-                    Text("あそびかた")
-                        .modifier(MainButtonModifier(color: themeManager.currentTheme.accentColor))
-                }
-                
-                // 設定画面へのリンク
-                NavigationLink(destination: SettingsView()) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title)
-                        .foregroundColor(themeManager.currentTheme.accentColor)
-                        .padding(10)
-                        .background(themeManager.currentTheme.cellColor)
-                        .clipShape(Circle())
-                }
-                .padding(.top, 20) // 設定ボタンの上にスペースを追加
             }
         }
         .navigationBarHidden(true)
     }
 }
 
-
-struct MainMenuView_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationStack {
-            MainMenuView()
-                .environmentObject(ThemeManager())
-        }
-    }
-}
+// ... Preview ...

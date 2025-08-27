@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct GameBoardView: View {
-    // boardプロパティをBindingから通常のvarに変更
     var board: [[Piece]]
     @Binding var selectedCoordinate: (row: Int, col: Int)?
     let onTapCell: (Int, Int) -> Void
@@ -9,23 +8,28 @@ struct GameBoardView: View {
     @EnvironmentObject var themeManager: ThemeManager
     
     var body: some View {
-        gameBoardView
-            .padding(.horizontal)
+        // GeometryReaderで利用可能なサイズを取得
+        GeometryReader { geometry in
+            gameBoardView(size: geometry.size)
+        }
+        .aspectRatio(1.0, contentMode: .fit) // 先にアスペクト比を固定
+        .padding(.horizontal)
     }
     
-    private var gameBoardView: some View {
-        ZStack {
-            
+    private func gameBoardView(size: CGSize) -> some View {
+        // 各要素のサイズを計算
+        let boardPadding = size.width * 0.05 // 全体のpadding
+        let cellSpacing = size.width * 0.015 // セル間のスペース
+        
+        return ZStack {
             // 背景
             RoundedRectangle(cornerRadius: 15)
                 .fill(themeManager.currentTheme.boardColor)
-                .aspectRatio(1.0, contentMode: .fit)
-                .padding(10)
             
             // 駒
-            VStack(spacing: 5) {
+            VStack(spacing: cellSpacing) {
                 ForEach(0..<5) { row in
-                    HStack(spacing: 5) {
+                    HStack(spacing: cellSpacing) {
                         ForEach(0..<5) { col in
                             CellView(
                                 piece: board[row][col],
@@ -34,13 +38,11 @@ struct GameBoardView: View {
                                     onTapCell(row, col)
                                 }
                             )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
                 }
             }
-            .aspectRatio(1.0, contentMode: .fit)
-            .padding(20)
+            .padding(boardPadding) // 計算したpaddingを適用
         }
     }
     

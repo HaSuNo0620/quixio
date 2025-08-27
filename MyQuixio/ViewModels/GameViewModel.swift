@@ -149,7 +149,7 @@ class GameViewModel: ObservableObject {
         
         if gameMode == .vsAI {
             if isAITurn {
-                return "相手（AI）が考えています..."
+                return "考え中..."
             } else {
                 return "あなたの番です"
             }
