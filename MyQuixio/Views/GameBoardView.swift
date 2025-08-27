@@ -18,7 +18,7 @@ struct GameBoardView: View {
             
             // 背景
             RoundedRectangle(cornerRadius: 15)
-                .fill(themeManager.currentTheme.boardBackgroundColor)
+                .fill(themeManager.currentTheme.boardColor)
                 .aspectRatio(1.0, contentMode: .fit)
                 .padding(10)
             
@@ -56,6 +56,6 @@ struct GameBoardView_Previews: PreviewProvider {
     
     static var previews: some View {
         GameBoardView(board: previewBoard, selectedCoordinate: $previewSelected, onTapCell: { _, _ in })
-            .environmentObject(ThemeManager.shared)
+            .environmentObject(ThemeManager())
     }
 }

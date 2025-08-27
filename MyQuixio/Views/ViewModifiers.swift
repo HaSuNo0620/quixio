@@ -58,3 +58,19 @@ struct PrimaryButtonStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
     }
 }
+
+struct MainButtonModifier: ViewModifier {
+    var color: Color
+    @EnvironmentObject var themeManager: ThemeManager
+
+    func body(content: Content) -> some View {
+        content
+            .customFont(.bold, size: 28)
+            .frame(maxWidth: 280, minHeight: 44)
+            .padding(.vertical, 8)
+            .background(color)
+            .foregroundColor(themeManager.currentTheme.backgroundColor)
+            .cornerRadius(15)
+            .shadow(color: .black.opacity(0.2), radius: 5, y: 3)
+    }
+}

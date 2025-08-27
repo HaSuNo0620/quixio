@@ -42,6 +42,6 @@ struct TutorialPageView_Previews: PreviewProvider {
             title: "ゲームの目的",
             description: "自分の色の駒を縦、横、斜めのいずれかに5つ並べたプレイヤーが勝利です。"
         )
-        .environmentObject(ThemeManager.shared)
+        .environmentObject(ThemeManager())
     }
 }

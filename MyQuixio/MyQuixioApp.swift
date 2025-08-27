@@ -12,7 +12,7 @@ import FirebaseCore
 struct MyQuixioApp: App {
     
     // 👇 ThemeManagerのインスタンスを生成w
-    @StateObject private var themeManager = ThemeManager.shared
+    @StateObject private var themeManager = ThemeManager()
     
     // 👇 このinit()メソッドを追加
     init() {

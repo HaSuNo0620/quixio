@@ -62,7 +62,7 @@ struct GameSetupView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             GameSetupView()
-                .environmentObject(ThemeManager.shared)
+                .environmentObject(ThemeManager())
         }
     }
 }

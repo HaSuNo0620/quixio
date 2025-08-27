@@ -15,14 +15,14 @@ struct HumanOpponentSelectionView: View {
                 VStack(alignment: .leading) {
                     Text("オンライン対戦")
                         .customFont(.bold, size: 18)
-                    Text("世界中のプレイヤーと対戦します")
-                        .customFont(.regular, size: 14)
-                        .opacity(0.8)
+                    Text("世界中のプレイヤーと対戦")
+                    .customFont(.regular, size: 14)
+                    .opacity(0.8)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .background(themeManager.currentTheme.accentColor.opacity(0.1))
-                .foregroundColor(themeManager.currentTheme.textColor)
+                .background(themeManager.currentTheme.accentColor)
+                .foregroundColor(themeManager.currentTheme.backgroundColor)
                 .cornerRadius(12)
             }
 
@@ -31,14 +31,14 @@ struct HumanOpponentSelectionView: View {
                 VStack(alignment: .leading) {
                     Text("オフライン対戦 (1台で)")
                         .customFont(.bold, size: 18)
-                    Text("このデバイスを交互に使って対戦します")
+                    Text("このデバイスを交互に使って対戦")
                         .customFont(.regular, size: 14)
                         .opacity(0.8)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .background(themeManager.currentTheme.accentColor.opacity(0.1))
-                .foregroundColor(themeManager.currentTheme.textColor)
+                .background(themeManager.currentTheme.accentColor)
+                .foregroundColor(themeManager.currentTheme.backgroundColor)
                 .cornerRadius(12)
             }
 
@@ -55,7 +55,7 @@ struct HumanOpponentSelectionView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             HumanOpponentSelectionView()
-                .environmentObject(ThemeManager.shared)
+                .environmentObject(ThemeManager())
         }
     }
 }

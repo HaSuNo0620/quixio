@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Default",
+    "cellColor": "#4F4F4F",
+    "boardColor": "#2C2C2C",
+    "backgroundColor": "#1A1A1A",
+    "textColor": "#FFFFFF",
+    "accentColor": "#3498DB",
+    "circleColor": "#3498DB",
+    "crossColor": "#E74C3C"
+  },
+  {
+    "name": "Forest",
+    "cellColor": "#607D3B",
+    "boardColor": "#4C6B2D",
+    "backgroundColor": "#38541F",
+    "textColor": "#E8F5E9",
+    "accentColor": "#A5D6A7",
+    "circleColor": "#A5D6A7",
+    "crossColor": "#FFB74D"
+  },
+  {
+    "name": "Ocean",
+    "cellColor": "#4A90E2",
+    "boardColor": "#357ABD",
+    "backgroundColor": "#1F618D",
+    "textColor": "#E0F7FA",
+    "accentColor": "#81D4FA",
+    "circleColor": "#81D4FA",
+    "crossColor": "#FFD54F"
+  },
+  {
+      "name": "Sunset",
+      "cellColor": "#E1BEE7",
+      "boardColor": "#CE93D8",
+      "backgroundColor": "#BA68C8",
+      "textColor": "#FFFFFF",
+      "accentColor": "#F8BBD0",
+      "circleColor": "#F8BBD0",
+      "crossColor": "#FFD180"
+    },
+    {
+      "name": "Sakura",
+      "cellColor": "#FFE4E1",
+      "boardColor": "#FFC0CB",
+      "backgroundColor": "#F5F5F5",
+      "textColor": "#333333",
+      "accentColor": "#FF69B4",
+      "circleColor": "#FF69B4",
+      "crossColor": "#4682B4"
+    }
+  ]

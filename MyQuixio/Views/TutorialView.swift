@@ -53,6 +53,6 @@ struct TutorialView: View {
 struct TutorialView_Previews: PreviewProvider {
     static var previews: some View {
         TutorialView()
-            .environmentObject(ThemeManager.shared)
+            .environmentObject(ThemeManager())
     }
 }

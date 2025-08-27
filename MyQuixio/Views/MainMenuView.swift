@@ -1,84 +1,65 @@
+// MyQuixio/Views/MainMenuView.swift
+
 import SwiftUI
 
 struct MainMenuView: View {
     @EnvironmentObject var themeManager: ThemeManager
-    @State private var isShowingTutorial = false
-    @State private var isShowingSettings = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
+        ZStack {
+            themeManager.currentTheme.backgroundColor
+                .ignoresSafeArea()
 
-            // --- タイトル ---
-            VStack {
+            VStack(spacing: 20) {
                 Text("Quixio")
-                    .customFont(.black, size: 64)
-                Text("究極の戦略ボードゲーム")
-                    .customFont(.medium, size: 18)
-            }
-            .foregroundColor(themeManager.currentTheme.accentColor)
+                    .font(.custom("MPLUSRounded1c-Black", size: 60))
+                    .foregroundColor(themeManager.currentTheme.textColor)
+                    .padding(.bottom, 30) // タイトルとボタンの間にスペースを追加
 
-            Spacer()
+                // --- 👇 「プレイ」ボタンを2つのボタンに置き換え ---
+                
+                // コンピュータと対戦する画面へのリンク
+                NavigationLink(destination: GameSetupView()) {
+                    Text("コンピュータと対戦")
+                        .modifier(MainButtonModifier(color: themeManager.currentTheme.accentColor))
+                }
 
-            // --- メインボタン ---
-            // vs AI
-            NavigationLink(destination: GameSetupView()) {
-                Label("vs AI", systemImage: "person.fill")
-                    .customFont(.bold, size: 22)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(themeManager.currentTheme.accentColor)
-                    .foregroundColor(themeManager.currentTheme.backgroundColor)
-                    .cornerRadius(16)
-                    .shadow(radius: 4, y: 4)
-            }
-
-            // vs 人
-            NavigationLink(destination: HumanOpponentSelectionView()) {
-                Label("vs 人", systemImage: "person.2.fill")
-                    .customFont(.bold, size: 22)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(themeManager.currentTheme.accentColor.opacity(0.8))
-                    .foregroundColor(themeManager.currentTheme.backgroundColor)
-                    .cornerRadius(16)
-                    .shadow(radius: 4, y: 4)
-            }
-
-            Spacer()
-
-            // --- 設定などのボタン ---
-            HStack(spacing: 30) {
-                Button(action: { isShowingTutorial.toggle() }) {
-                    Label("遊び方", systemImage: "info.circle.fill")
-                        .customFont(.bold, size: 16)
+                // 友達と対戦する画面へのリンク
+                NavigationLink(destination: HumanOpponentSelectionView()) {
+                    Text("友達と対戦")
+                        .modifier(MainButtonModifier(color: themeManager.currentTheme.accentColor))
                 }
                 
-                Button(action: { isShowingSettings.toggle() }) {
-                    Label("設定", systemImage: "gearshape.fill")
-                        .customFont(.bold, size: 16)
+                // --- 👆 ここまでが変更点 ---
+
+                // チュートリアル画面へのリンク
+                NavigationLink(destination: TutorialView()) {
+                    Text("あそびかた")
+                        .modifier(MainButtonModifier(color: themeManager.currentTheme.accentColor))
                 }
+                
+                // 設定画面へのリンク
+                NavigationLink(destination: SettingsView()) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title)
+                        .foregroundColor(themeManager.currentTheme.accentColor)
+                        .padding(10)
+                        .background(themeManager.currentTheme.cellColor)
+                        .clipShape(Circle())
+                }
+                .padding(.top, 20) // 設定ボタンの上にスペースを追加
             }
-            .foregroundColor(themeManager.currentTheme.accentColor.opacity(0.8))
-            .padding(.bottom)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(themeManager.currentTheme.backgroundColor.edgesIgnoringSafeArea(.all))
-        .sheet(isPresented: $isShowingTutorial) {
-            TutorialView()
-                .environmentObject(themeManager)
-        }
-        .sheet(isPresented: $isShowingSettings) {
-            SettingsView()
-                .environmentObject(themeManager)
-        }
+        .navigationBarHidden(true)
     }
 }
 
+
 struct MainMenuView_Previews: PreviewProvider {
     static var previews: some View {
-        MainMenuView()
-            .environmentObject(ThemeManager.shared)
+        NavigationStack {
+            MainMenuView()
+                .environmentObject(ThemeManager())
+        }
     }
 }
