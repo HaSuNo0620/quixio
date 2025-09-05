@@ -4,14 +4,13 @@ import Combine
 import FirebaseFirestore // Timestampのために必要
 
 class OnlineGameViewModel: ObservableObject {
+    
     @Published var gameService = GameService()
     @Published var game: GameSession?
     @Published var selectedCoordinate: (row: Int, col: Int)? = nil
-    
-    // ▼▼▼【ここから追加】エラーハンドリング用のプロパティ ▼▼▼
     @Published var showErrorAlert = false
     @Published var errorMessage = ""
-    // ▲▲▲ 追加ここまで ▲▲▲
+    @Published private var isProcessingMove = false
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -52,9 +51,9 @@ class OnlineGameViewModel: ObservableObject {
     // MARK: - Game Logic (ここから追加)
     
     func handleTap(onRow row: Int, col: Int) {
-        guard let game = game, let myTurn = myTurn else { return }
         
-        // 自分のターンでなければ何もしない
+        guard !isProcessingMove else { return }
+        guard let game = game, let myTurn = myTurn else { return }
         guard game.currentPlayerTurn == myTurn else {
             print("Not your turn.")
             return
@@ -105,6 +104,8 @@ class OnlineGameViewModel: ObservableObject {
     private func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
         guard let game = game, let myTurn = myTurn else { return }
         
+        isProcessingMove = true
+        
         let playerToMove: Player = (myTurn == .host) ? .circle : .cross
         let pieceToSlide = Piece.mark(playerToMove)
         
@@ -132,6 +133,9 @@ class OnlineGameViewModel: ObservableObject {
                 let nextTurn: PlayerTurn = (myTurn == .host) ? .guest : .host
                 await gameService.updateGame(board: newBoard1D, nextTurn: nextTurn)
             }
+            await MainActor.run {
+                        self.isProcessingMove = false
+                    }
         }
     }
 

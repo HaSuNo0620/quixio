@@ -3,6 +3,11 @@
 import SwiftUI
 import Combine
 
+struct GameState {
+    let board: [[Piece]]
+    let currentPlayer: Player
+}
+
 // ObservableObject: このオブジェクトの変更をViewが監視できるようにする
 class GameViewModel: ObservableObject {
     
@@ -15,6 +20,7 @@ class GameViewModel: ObservableObject {
     @Published var isAITurn: Bool = false
     @Published var winningLine: [(row: Int, col: Int)]? = nil
     @Published var aiLevel: AILevel = .medium
+    @Published private var history: [GameState] = []
     
     private let aiPlayer = AIPlayer()
     
@@ -90,6 +96,9 @@ class GameViewModel: ObservableObject {
     }
     
     func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
+        
+        saveCurrentState()
+        
         SoundManager.shared.playSound(named: "slide.mp3")
         HapticManager.shared.playImpact(style: .rigid)
         
@@ -131,7 +140,43 @@ class GameViewModel: ObservableObject {
         self.selectedCoordinate = nil
         self.winner = nil
         self.winningLine = nil
+        self.history = []
     }
+    
+    func undoMove() {
+            // 履歴が空の場合は何もしない
+            guard !history.isEmpty else { return }
+
+            var stateToRestore: GameState?
+
+            // AI対戦モードで、かつプレイヤーのターンの場合
+            if gameMode == .vsAI && !isAITurn {
+                // AIの手の前の状態を履歴から取り出す（使わない）
+                history.popLast()
+                // プレイヤーの手の前の状態を履歴から取り出し、復元対象とする
+                stateToRestore = history.popLast()
+            } else {
+                // 対人戦モードの場合は、直前の状態を復元対象とする
+                stateToRestore = history.popLast()
+            }
+            
+            // 復元する状態がある場合
+            if let state = stateToRestore {
+                self.board = state.board
+                self.currentPlayer = state.currentPlayer
+                self.winner = nil
+                self.winningLine = nil
+                self.selectedCoordinate = nil
+            } else {
+                // 復元する状態がなければ（履歴が空になった場合）、ゲームを初期状態にリセットする
+                resetGame()
+            }
+        }
+        
+        private func saveCurrentState() {
+            let currentState = GameState(board: self.board, currentPlayer: self.currentPlayer)
+            history.append(currentState)
+        }
     
     private func slide(from: (row: Int, col: Int), to: (row: Int, col: Int)) {
         let pieceToSlide = Piece.mark(self.currentPlayer)

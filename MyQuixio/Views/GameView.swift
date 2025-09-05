@@ -49,6 +49,35 @@ struct GameView: View {
                         Alert(title: Text("無効な操作"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
                     }
                     
+                    HStack(spacing: 40) { // ボタン間のスペースを調整
+                                            Button(action: {
+                                                viewModel.resetGame()
+                                            }) {
+                                                VStack {
+                                                    Image(systemName: "arrow.counterclockwise.circle.fill")
+                                                        .font(.largeTitle)
+                                                    Text("リセット")
+                                                        .customFont(.medium, size: 14)
+                                                }
+                                                .foregroundColor(themeManager.currentTheme.accentColor)
+                                            }
+                                            
+                                            Button(action: {
+                                                viewModel.undoMove()
+                                            }) {
+                                                VStack {
+                                                    Image(systemName: "arrow.uturn.backward.circle.fill")
+                                                        .font(.largeTitle)
+                                                    Text("一手戻る")
+                                                        .customFont(.medium, size: 14)
+                                                }
+                                                .foregroundColor(themeManager.currentTheme.accentColor)
+                                            }
+                                            // AI対戦以外、またはAIのターンでない場合のみ「一手戻る」を有効化
+                                            .disabled(viewModel.gameMode == .vsAI && viewModel.isAITurn)
+                                        }
+                                        .padding()
+                    
                     // 下部の余白
                     Spacer()
                 }
@@ -56,7 +85,7 @@ struct GameView: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
-        .navigationTitle(viewModel.gameMode == .vsAI ? "AIと対戦" : "オフライン対戦")
+        .navigationTitle(viewModel.gameMode == .vsAI ? "AIと対戦 (\(viewModel.aiLevel.rawValue))" : "オフライン対戦")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

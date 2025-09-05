@@ -11,10 +11,10 @@ struct MainMenuView: View {
                 themeManager.currentTheme.backgroundColor
                     .ignoresSafeArea()
 
-                VStack(spacing: screenWidth * 0.05) { // spacing
+                VStack(spacing: screenWidth * 0.02) { // spacing
                     Text("Quixio")
                         // フォントサイズを画面幅の20%に
-                        .font(.custom("MPLUSRounded1c-Black", size: screenWidth * 0.2))
+                        .customFont(.extrabold, size:screenWidth * 0.2)
                         .foregroundColor(themeManager.currentTheme.textColor)
                         // paddingを画面幅の10%に
                         .padding(.bottom, screenWidth * 0.1)
@@ -25,6 +25,7 @@ struct MainMenuView: View {
                             // 画面幅に応じて計算した値を渡す
                             .modifier(MainButtonModifier(
                                 color: themeManager.currentTheme.accentColor,
+                                screenWidth:screenWidth * 0.95,
                                 fontSize: screenWidth * 0.07,
                                 verticalPadding: screenWidth * 0.03,
                                 cornerRadius: screenWidth * 0.04
@@ -36,6 +37,7 @@ struct MainMenuView: View {
                         Text("友達と対戦")
                             .modifier(MainButtonModifier(
                                 color: themeManager.currentTheme.accentColor,
+                                screenWidth:screenWidth * 0.95,
                                 fontSize: screenWidth * 0.07,
                                 verticalPadding: screenWidth * 0.03,
                                 cornerRadius: screenWidth * 0.04
@@ -47,6 +49,7 @@ struct MainMenuView: View {
                         Text("あそびかた")
                             .modifier(MainButtonModifier(
                                 color: themeManager.currentTheme.accentColor,
+                                screenWidth:screenWidth * 0.95,
                                 fontSize: screenWidth * 0.07,
                                 verticalPadding: screenWidth * 0.03,
                                 cornerRadius: screenWidth * 0.04

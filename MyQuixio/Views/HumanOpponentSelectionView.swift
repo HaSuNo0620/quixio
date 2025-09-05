@@ -12,7 +12,7 @@ struct HumanOpponentSelectionView: View {
             ZStack {
                 themeManager.currentTheme.backgroundColor.ignoresSafeArea()
                 
-                VStack(spacing: screenWidth * 0.08) { // 👈 spacing
+                VStack(spacing: screenWidth * 0.03) { // 👈 spacing
                     
                     Text("対戦方法を選択")
                         .customFont(.bold, size: screenWidth * 0.09) // 👈 font size
@@ -40,7 +40,7 @@ struct HumanOpponentSelectionView: View {
                         .modifier(SelectionButtonModifier(color: themeManager.currentTheme.accentColor))
                     }
                 }
-                .padding(.horizontal, screenWidth * 0.1) // 👈 padding
+                .padding(.horizontal, screenWidth * 0.05) // 👈 padding
             }
             .navigationTitle("友達と対戦")
             .navigationBarTitleDisplayMode(.inline)

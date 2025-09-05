@@ -26,7 +26,7 @@ struct GameSetupView: View {
                                 }
                             } label: {
                                 Text(level.rawValue)
-                                    .customFont(.bold, size: screenWidth * 0.055) // 👈 font size
+                                    .customFont(.bold, size: screenWidth * 0.08) // 👈 font size
                                     .frame(maxWidth: .infinity)
                                     .padding()
                                     .background(selectedAILevel == level ? themeManager.currentTheme.accentColor : themeManager.currentTheme.accentColor.opacity(0.1))

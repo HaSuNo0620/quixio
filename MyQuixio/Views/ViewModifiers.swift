@@ -62,6 +62,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct MainButtonModifier: ViewModifier {
     var color: Color
     // フォントサイズやパディングを外部から渡せるようにする
+    var screenWidth: CGFloat
     var fontSize: CGFloat
     var verticalPadding: CGFloat
     var cornerRadius: CGFloat
@@ -71,7 +72,7 @@ struct MainButtonModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .customFont(.bold, size: fontSize) // 引数を使用
-            .frame(maxWidth: .infinity) // 横幅は最大に広げる
+            .frame(maxWidth: screenWidth) // 横幅は最大に広げる
             .padding(.vertical, verticalPadding) // 引数を使用
             .background(color)
             .foregroundColor(themeManager.currentTheme.backgroundColor)
