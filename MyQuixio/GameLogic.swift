@@ -5,6 +5,10 @@ import Foundation
 /// ゲームのコアロジックを管理する静的なヘルパー
 struct GameLogic {
 
+    
+    static func isPeripheral(row: Int, column: Int) -> Bool {
+        return row == 0 || row == 4 || column == 0 || column == 4
+    }
     /**
      * 汎用的な勝者判定ロジック。
      * 盤面のデータ型に依存しないようにジェネリクスを使用します。
@@ -12,6 +16,7 @@ struct GameLogic {
      * - board: 2次元配列で表現された盤面。
      * - playerMapping: 盤面の要素からプレイヤーを特定するためのクロージャ。
      * - Returns: 勝者プレイヤーと、勝利ラインの座標のタプル。勝者がいなければnil。
+     * 
      */
     static func checkForWinner<T>(on board: [[T]], playerMapping: (T) -> Player?) -> (player: Player, line: [(row: Int, col: Int)])? {
         // 横ラインのチェック
@@ -89,6 +94,42 @@ struct GameLogic {
         }
         return tempBoard
     }
+    
+    static func getAllPossibleMoves(for player: Player, on board: [[Piece]]) -> [(source: (row: Int, col: Int), destination: (row: Int, col: Int))] {
+            var possibleMoves: [(source: (row: Int, col: Int), destination: (row: Int, col: Int))] = []
+            for r in 0..<5 {
+                for c in 0..<5 {
+                    if isPeripheral(row: r, column: c) {
+                        let piece = board[r][c]
+                        var canSelect = false
+                        
+                        switch piece {
+                        case .empty:
+                            canSelect = true
+                        case .mark(let owner) where owner == player:
+                            canSelect = true
+                        default:
+                            break
+                        }
+                        
+                        if canSelect {
+                            let source = (row: r, col: c)
+                            let destinations = [
+                                (r, 0), (r, 4), (0, c), (4, c)
+                            ].filter { $0.0 != source.row || $0.1 != source.col }
+                            
+                            for dest in destinations {
+                                let newMove = (source: source, destination: (row: dest.0, col: dest.1))
+                                if !possibleMoves.contains(where: { $0.source == newMove.source && $0.destination == newMove.destination }) {
+                                    possibleMoves.append(newMove)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return possibleMoves
+        }
 }
 
 // Player enum を `OnlineGameViewModel` でも使えるように、`GameModels.swift` から移動もしくは公開アクセスレベルに変更が必要。
