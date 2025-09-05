@@ -22,6 +22,7 @@ class GameService: ObservableObject {
         
         let query = db.collection("games")
             .whereField("status", isEqualTo: GameStatus.waiting.rawValue)
+            .whereField("hostPlayerID", isNotEqualTo: currentUserID)
             .limit(to: 1)
         
         let snapshot = try await query.getDocuments()
@@ -30,19 +31,20 @@ class GameService: ObservableObject {
             let snapshot = try await query.getDocuments()
             
             if let gameToJoinDoc = snapshot.documents.first {
-                // 待機中のゲームに参加
+                // 待機中のゲームに参加する
+                print("Found a game to join: \(gameToJoinDoc.documentID)")
                 let gameToJoin = try gameToJoinDoc.data(as: GameSession.self)
                 try await joinGame(gameToJoin)
             } else {
-                // 待機中のゲームがなければ新規作成
+                // 参加できるゲームがなければ、新しいゲームを作成する
+                print("No waiting games found. Creating a new one.")
                 try await createNewGame()
             }
-        }catch{
-                // ▼▼▼【ここから修正】ネットワークエラーなどをキャッチして独自エラーをスローする ▼▼▼
-                print("Error finding game: \(error.localizedDescription)")
-                throw GameError.networkError(error)
-                // ▲▲▲ 修正ここまで ▲▲▲
-            }
+        } catch {
+            // エラーが発生した場合は、内容を出力してカスタムエラーをスローする
+            print("Error finding or joining game: \(error.localizedDescription)")
+            throw GameError.networkError(error)
+        }
             }
 
     private func createNewGame() async throws {
@@ -118,17 +120,47 @@ class GameService: ObservableObject {
         }
     }
     
-    // MARK: - Game State Listening (変更なし)
+    // MARK: - Game State Listening
     private func listenForGameChanges(gameID: String) {
-        self.listener = db.collection("games").document(gameID).addSnapshotListener { [weak self] documentSnapshot, error in
-            guard let document = documentSnapshot else { return }
-            do {
-                self?.game = try document.data(as: GameSession.self)
-            } catch {
-                print("Error decoding game data: \(error.localizedDescription)")
-            }
-        }
-    }
+           // 既存のリスナーがあれば解除してから新しいリスナーを設定
+           listener?.remove()
+           
+           self.listener = db.collection("games").document(gameID).addSnapshotListener { [weak self] documentSnapshot, error in
+               
+               // 1. スナップショット取得時にエラーがあれば、コンソールに出力して処理を中断
+               if let error = error {
+                   print("Error fetching document snapshot: \(error.localizedDescription)")
+                   return
+               }
+               
+               // 2. ドキュメントが存在し、データがあることを確認
+               guard let document = documentSnapshot, document.exists else {
+                   print("Document does not exist or has been deleted.")
+                   // ドキュメントが削除された場合、ローカルのゲームもnilにする
+                   DispatchQueue.main.async {
+                       self?.game = nil
+                   }
+                   return
+               }
+               
+               // 3. do-catchブロックでデコードを試みる
+               do {
+                   // デコードを試み、成功したらメインスレッドでgameプロパティを更新
+                   let decodedGame = try document.data(as: GameSession.self)
+                   DispatchQueue.main.async {
+                       self?.game = decodedGame
+                   }
+               } catch {
+                   // デコードに失敗した場合、エラーの詳細をコンソールに出力
+                   print("Error decoding game data: \(error.localizedDescription)")
+                   // デコードに失敗した場合は、安全のためにローカルのゲームをnilにする
+                   DispatchQueue.main.async {
+                       self?.game = nil
+                   }
+               }
+           }
+       }
+
     
     deinit {
         print("GameService deinitialized. Removing listener.")

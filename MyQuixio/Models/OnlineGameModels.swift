@@ -6,9 +6,6 @@ import FirebaseFirestore
 // Firestoreのドキュメントに対応するモデル
 struct GameSession: Codable, Identifiable {
     @DocumentID var id: String? // FirestoreのドキュメントIDを自動でマッピング
-    
-    
-    
     var board: [String] // "empty", "circle", "cross" のような文字列で管理
     
     let hostPlayerID: String
@@ -40,12 +37,13 @@ struct GameSession: Codable, Identifiable {
 
 // 文字列で状態を管理するためのenum
 enum GameStatus: String, Codable {
-    case waiting      // ゲスト参加待ち
-    case in_progress  // 対戦中
-    case finished     // 対戦終了
+    case waiting      // プレイヤーを待っている状態
+    case in_progress  // ゲーム進行中
+    case finished     // ゲーム終了
 }
 
+// どちらのプレイヤーのターンか
 enum PlayerTurn: String, Codable {
-    case host
-    case guest
+    case host   // ホストプレイヤー (Circle)
+    case guest  // ゲストプレイヤー (Cross)
 }

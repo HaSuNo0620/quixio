@@ -14,7 +14,7 @@ struct OnlineGameView: View {
                 Text(viewModel.turnIndicatorText)
                     .font(.title3).fontWeight(.bold).foregroundColor(Color("TextColor"))
                     .padding(.horizontal).multilineTextAlignment(.center).frame(height: 50)
-                    .flip(isFlipped: viewModel.game?.currentPlayerTurn != viewModel.myTurn) // 自分のターンかどうかで反転
+//                    .flip(isFlipped: viewModel.game?.currentPlayerTurn != viewModel.myTurn) // 自分のターンかどうかで反転
                     .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.game?.currentPlayerTurn) // ターン変更でアニメーション
 
                 // ここで$viewModel.displayBoardではなく、viewModel.displayBoardとして渡す

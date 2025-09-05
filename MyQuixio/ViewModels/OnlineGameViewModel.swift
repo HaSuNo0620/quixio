@@ -3,16 +3,37 @@ import Foundation
 import Combine
 import FirebaseFirestore // Timestampのために必要
 
+
+
 class OnlineGameViewModel: ObservableObject {
     
     @Published var gameService = GameService()
-    @Published var game: GameSession?
+    @Published var game: GameSession? {
+        didSet {
+                   print("\n--- [\(myRoleForPrint)] Game State Did Update ---")
+                   if let game = game {
+                       print("Status: \(game.status), Current Turn: \(game.currentPlayerTurn)")
+                       print("My Turn? \(game.currentPlayerTurn == myTurn)")
+                   } else {
+                       print("Game object is now nil.")
+                   }
+                   print("-------------------------------------\n")
+               }
+    }
     @Published var selectedCoordinate: (row: Int, col: Int)? = nil
     @Published var showErrorAlert = false
     @Published var errorMessage = ""
     @Published private var isProcessingMove = false
     
     private var cancellables = Set<AnyCancellable>()
+    
+    private var myRoleForPrint: String {
+        switch myTurn {
+        case .host: return "HOST"
+        case .guest: return "GUEST"
+        default: return "UNKNOWN"
+        }
+    }
     
     // 👇 自分がどちらのプレイヤーか判定するプロパティ
     var myTurn: PlayerTurn? {
@@ -38,12 +59,20 @@ class OnlineGameViewModel: ObservableObject {
                 try await gameService.findAndJoinGame()
             } catch let error as GameError {
                 // 補足した独自エラーのメッセージを設定
-                self.errorMessage = error.localizedDescription
-                self.showErrorAlert = true
+                await MainActor.run {
+                    self.errorMessage = error.localizedDescription
+                    self.showErrorAlert = true
+                }
             } catch {
-                // その他の予期せぬエラー
-                self.errorMessage = GameError.unknownError.localizedDescription
-                self.showErrorAlert = true
+                print("An unexpected error occurred. Error type: \(type(of: error))")
+                print("Error details: \(error)")
+                
+                // ▼▼▼【ここから修正】UI更新をメインスreadで行う ▼▼▼
+                await MainActor.run {
+                    // ユーザーには汎用的なメッセージを表示
+                    self.errorMessage = GameError.unknownError.localizedDescription
+                    self.showErrorAlert = true
+                }
             }
         }
     }
