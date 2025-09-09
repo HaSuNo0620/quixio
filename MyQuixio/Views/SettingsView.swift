@@ -21,6 +21,9 @@ struct SettingsView: View {
             Form {
                 themeSelectorSection
                 soundSettingsSection
+                #if DEBUG
+                    developerSection
+                #endif
             }
             .scrollContentBackground(.hidden) // Formのデフォルト背景を透明にする
             .navigationTitle("設定")
@@ -77,7 +80,18 @@ struct SettingsView: View {
         .foregroundColor(themeManager.currentTheme.accentColor)
     }
 }
-
+#if DEBUG
+private var developerSection: some View {
+    Section(header: Text("開発者向け機能")) {
+        NavigationLink(destination: DataGenerationView()) {
+            HStack {
+                Image(systemName: "doc.text.fill")
+                Text("教師データ生成")
+            }
+        }
+    }
+}
+#endif
 // プレビュー用のコード
 struct SettingsView_Previews: PreviewProvider {
     static var previews: some View {

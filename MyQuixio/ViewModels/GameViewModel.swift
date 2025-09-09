@@ -1,4 +1,4 @@
-// MARK: - GameViewModel.swift
+// MyQuixio/ViewModels/GameViewModel.swift
 
 import SwiftUI
 import Combine
@@ -8,10 +8,8 @@ struct GameState {
     let currentPlayer: Player
 }
 
-// ObservableObject: このオブジェクトの変更をViewが監視できるようにする
 class GameViewModel: ObservableObject {
     
-    // MARK: - Published Properties
     @Published var board: [[Piece]] = Array(repeating: Array(repeating: .empty, count: 5), count: 5)
     @Published var currentPlayer: Player = .circle
     @Published var selectedCoordinate: (row: Int, col: Int)? = nil
@@ -19,33 +17,37 @@ class GameViewModel: ObservableObject {
     @Published var gameMode: GameMode
     @Published var isAITurn: Bool = false
     @Published var winningLine: [(row: Int, col: Int)]? = nil
-    @Published var aiLevel: AILevel = .medium
+    @Published var aiLevel: AILevel
     @Published private var history: [GameState] = []
     
-    private let aiPlayer = AIPlayer()
+    // ▼▼▼【ここから修正】AIプレイヤーのインスタンスを2種類保持するように変更 ▼▼▼
+    private let mctsAIPlayer = AIPlayer()
+    private var alphaZeroAIPlayer: AlphaZeroAIPlayer? // 新しいAIはレベルに応じて初期化
+    // ▲▲▲ 修正ここまで ▲▲▲
     
     let invalidMovePublisher = PassthroughSubject<Void, Never>()
-    
-    // MARK: - Initializer
     
     // vs AIモードとAIレベルを引数で受け取るイニシャライザ
     init(gameMode: GameMode, aiLevel: AILevel) {
         self.gameMode = gameMode
         self.aiLevel = aiLevel
+        // ▼▼▼【ここから追加】AIレベルがultimateなら、AlphaZeroAIを初期化する ▼▼▼
+        if aiLevel == .ultimate {
+            self.alphaZeroAIPlayer = AlphaZeroAIPlayer(level: aiLevel)
+        }
+        // ▲▲▲ 追加ここまで ▲▲▲
     }
     
     // vs 人モード用のイニシャライザ
     init(gameMode: GameMode) {
         self.gameMode = gameMode
+        self.aiLevel = .medium // デフォルト値を設定
     }
-    
-    // デフォルトのイニシャライザは廃止
 
-    // MARK: - Game Logic Methods
-    
+    // (handleTap, executeMove などの他のメソッドは変更なし)
     func handleTap(onRow row: Int, col column: Int) {
         guard self.winner == nil else { return }
-        guard !self.isAITurn else { return } // AIの思考中はタップを無効化
+        guard !self.isAITurn else { return }
         
         if self.selectedCoordinate == nil {
             let piece = self.board[row][column]
@@ -96,20 +98,15 @@ class GameViewModel: ObservableObject {
     }
     
     func executeMove(from source: (row: Int, col: Int), to destination: (row: Int, col: Int)) {
-        
         saveCurrentState()
-        
         SoundManager.shared.playSound(named: "slide.mp3")
         HapticManager.shared.playImpact(style: .rigid)
-        
         withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
             self.slide(from: source, to: destination)
         }
-        
         if let result = self.checkWinner() {
             SoundManager.shared.playSound(named: "win.mp3")
             HapticManager.shared.playNotification(type: .success)
-            
             withAnimation(.easeInOut.delay(0.5)) {
                 self.winner = result.player
                 self.winningLine = result.line
@@ -134,7 +131,6 @@ class GameViewModel: ObservableObject {
 
     func resetGame() {
         HapticManager.shared.playImpact(style: .soft)
-        
         self.board = Array(repeating: Array(repeating: .empty, count: 5), count: 5)
         self.currentPlayer = .circle
         self.selectedCoordinate = nil
@@ -144,39 +140,29 @@ class GameViewModel: ObservableObject {
     }
     
     func undoMove() {
-            // 履歴が空の場合は何もしない
-            guard !history.isEmpty else { return }
-
-            var stateToRestore: GameState?
-
-            // AI対戦モードで、かつプレイヤーのターンの場合
-            if gameMode == .vsAI && !isAITurn {
-                // AIの手の前の状態を履歴から取り出す（使わない）
-                history.popLast()
-                // プレイヤーの手の前の状態を履歴から取り出し、復元対象とする
-                stateToRestore = history.popLast()
-            } else {
-                // 対人戦モードの場合は、直前の状態を復元対象とする
-                stateToRestore = history.popLast()
-            }
-            
-            // 復元する状態がある場合
-            if let state = stateToRestore {
-                self.board = state.board
-                self.currentPlayer = state.currentPlayer
-                self.winner = nil
-                self.winningLine = nil
-                self.selectedCoordinate = nil
-            } else {
-                // 復元する状態がなければ（履歴が空になった場合）、ゲームを初期状態にリセットする
-                resetGame()
-            }
+        guard !history.isEmpty else { return }
+        var stateToRestore: GameState?
+        if gameMode == .vsAI && !isAITurn {
+            history.popLast()
+            stateToRestore = history.popLast()
+        } else {
+            stateToRestore = history.popLast()
         }
+        if let state = stateToRestore {
+            self.board = state.board
+            self.currentPlayer = state.currentPlayer
+            self.winner = nil
+            self.winningLine = nil
+            self.selectedCoordinate = nil
+        } else {
+            resetGame()
+        }
+    }
         
-        private func saveCurrentState() {
-            let currentState = GameState(board: self.board, currentPlayer: self.currentPlayer)
-            history.append(currentState)
-        }
+    private func saveCurrentState() {
+        let currentState = GameState(board: self.board, currentPlayer: self.currentPlayer)
+        history.append(currentState)
+    }
     
     private func slide(from: (row: Int, col: Int), to: (row: Int, col: Int)) {
         let pieceToSlide = Piece.mark(self.currentPlayer)
@@ -191,34 +177,37 @@ class GameViewModel: ObservableObject {
                 return winner == .circle ? "◯ の勝利です！" : "✕ の勝利です"
             }
         }
-        
         if gameMode == .vsAI {
-            if isAITurn {
-                return "考え中..."
-            } else {
-                return "あなたの番です"
-            }
+            if isAITurn { return "考え中..." }
+            else { return "あなたの番です" }
         }
-        
         if gameMode == .vsHuman {
             return currentPlayer == .circle ? "◯ の番です" : "✕ の番です"
         }
-        
         return ""
     }
 
     func triggerAIMove() {
         guard !isAITurn, winner == nil, gameMode == .vsAI, currentPlayer == .cross else { return }
-
         isAITurn = true
 
         Task {
             do {
                 try await Task.sleep(nanoseconds: 500_000_000)
 
-                if let bestMove = self.aiPlayer.getBestMove(for: self.board, level: self.aiLevel) {
+                // ▼▼▼【ここから修正】AIレベルに応じて使用するAIを切り替える ▼▼▼
+                let bestMove: (source: (row: Int, col: Int), destination: (row: Int, col: Int))?
+                
+                if self.aiLevel == .ultimate {
+                    bestMove = self.alphaZeroAIPlayer?.getBestMove(for: self.board, currentPlayer: .cross)
+                } else {
+                    bestMove = self.mctsAIPlayer.getBestMove(for: self.board, level: self.aiLevel)
+                }
+                // ▲▲▲ 修正ここまで ▲▲▲
+
+                if let move = bestMove {
                     await MainActor.run {
-                        self.executeMove(from: bestMove.source, to: bestMove.destination)
+                        self.executeMove(from: move.source, to: move.destination)
                         self.isAITurn = false
                     }
                 } else {

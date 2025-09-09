@@ -1,7 +1,8 @@
-// MARK: - GameModels.swift
+// MyQuixio/Models/Gamemodels.swift
 
 import Foundation
 
+// ... (Player, Piece, GameMode enumsは変更なし) ...
 enum Player: Equatable {
     case circle
     case cross
@@ -16,29 +17,35 @@ enum GameMode {
     case vsHuman
     case vsAI
 }
-// CaseIterable を追加
 
 enum AILevel: String, CaseIterable {
     case easy = "簡単"
     case medium = "普通"
     case hard = "難しい"
-    // ▼▼▼【ここから追加】▼▼▼
     case expert = "エキスパート"
-    // ▲▲▲ 追加ここまで ▲▲▲
+    case ultimate = "アルティメット"
+    #if DEBUG
+        case forDataGeneration = "データ生成用" // UIには表示しない内部的なレベル
+    #endif
     
     var iconName: String {
         switch self {
         case .easy:
-            return "tortoise.fill"        // 亀（簡単）
+            return "tortoise.fill"
         case .medium:
-            return "figure.walk"          // 人（普通）
+            return "figure.walk"
         case .hard:
-            return "brain.head.profile"   // 脳（難しい）
-        // ▼▼▼【ここから追加】▼▼▼
+            return "brain.head.profile"
         case .expert:
-            return "crown.fill"           // 王冠（エキスパート）
-        // ▲▲▲ 追加ここまで ▲▲▲
+            return "crown.fill"
+        case .ultimate:
+            return "sparkles" // 究極AIのアイコン
+        
+        #if DEBUG
+            case .forDataGeneration:
+                return "shippingbox.fill" // 開発者向け機能のアイコン
+        #endif
         }
     }
-    // ▲▲▲ 追加ここまで ▲▲▲
 }
+

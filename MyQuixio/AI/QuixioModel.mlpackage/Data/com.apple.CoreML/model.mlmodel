@@ -1,0 +1,672 @@
+√
+5
+input_1Current board state (3x5x5).*
+
+êÄR(
+policyPolicy prediction.
+*
+2êÄR&
+valueValue prediction.
+*
+êÄ¢∂AI Development Team¢3
+#com.github.apple.coremltools.sourcetorch==2.2.2¢+
+$com.github.apple.coremltools.version7.2¢:
++com.github.apple.coremltools.source_dialectTorchScript≤√+÷)
+mainÕ)
+)
+input_1
+
+
+
+
+
+CoreML6ñ)
+CoreML6ä)policyvalueL
+const
+var_11
+*
+name
+
+	"
+op_11*
+val
+
+
+]
+const
+var_17
+
+
+*
+name
+
+	"
+op_17*
+val
+
+
+
+
+]
+const
+var_19
+
+
+*
+name
+
+	"
+op_19*
+val
+
+
+
+
+j
+const
+input_5_pad_type_0
+*(
+name 
+
+"
+input_5_pad_type_0*
+val
+
+
+"
+customn
+const
+input_5_pad_0
+
+
+*#
+name
+
+"
+input_5_pad_0*!
+val
+
+
+
+
+
+¿
+const:
+input_7_weight_0_to_fp16
+
+
+@
+
+
+*.
+name&
+
+"
+input_7_weight_0_to_fp16*K
+valD
+
+
+@
+
+
+*"
+@model_path/weights/weight.bin@ô
+const&
+input_7_bias_0_to_fp16
+
+
+
+@*,
+name$
+
+"
+input_7_bias_0_to_fp16*:
+val3
+
+
+
+@*#
+@model_path/weights/weight.binÄ∆
+conv
+x
+	
+input_1&
+weight
+
+input_7_weight_0_to_fp16"
+bias
+
+input_7_bias_0_to_fp16
+strides
+
+
+var_17"
+pad_type
+
+input_5_pad_type_0
+pad
+
+input_5_pad_0
+	dilations
+
+
+var_19
+groups
+
+
+var_113
+input_7_cast_fp16
+
+
+
+@
+
+*'
+name
+
+"
+input_7_cast_fp16}
+relu
+x
+
+input_7_cast_fp162
+var_27_cast_fp16
+
+
+
+@
+
+*%
+name
+
+"
+op_27_cast_fp16L
+const
+var_32
+*
+name
+
+	"
+op_32*
+val
+
+
+]
+const
+var_40
+
+
+*
+name
+
+	"
+op_40*
+val
+
+
+
+
+]
+const
+var_42
+
+
+*
+name
+
+	"
+op_42*
+val
+
+
+
+
+j
+const
+input_2_pad_type_0
+*(
+name 
+
+"
+input_2_pad_type_0*
+val
+
+
+"
+customn
+const
+input_2_pad_0
+
+
+*#
+name
+
+"
+input_2_pad_0*!
+val
+
+
+
+
+
+¡
+const:
+input_4_weight_0_to_fp16
+
+
+@
+@
+
+*.
+name&
+
+"
+input_4_weight_0_to_fp16*L
+valE
+
+
+@
+@
+
+*#
+@model_path/weights/weight.bin¿ö
+const&
+input_4_bias_0_to_fp16
+
+
+
+@*,
+name$
+
+"
+input_4_bias_0_to_fp16*;
+val4
+
+
+
+@*$
+@model_path/weights/weight.binÄﬁœ
+conv
+x
+
+var_27_cast_fp16&
+weight
+
+input_4_weight_0_to_fp16"
+bias
+
+input_4_bias_0_to_fp16
+strides
+
+
+var_40"
+pad_type
+
+input_2_pad_type_0
+pad
+
+input_2_pad_0
+	dilations
+
+
+var_42
+groups
+
+
+var_323
+input_4_cast_fp16
+
+
+
+@
+
+*'
+name
+
+"
+input_4_cast_fp16}
+relu
+x
+
+input_4_cast_fp162
+var_50_cast_fp16
+
+
+
+@
+
+*%
+name
+
+"
+op_50_cast_fp16]
+const
+var_53
+
+
+*
+name
+
+	"
+op_53*
+val
+
+
+
+
+]
+const
+var_55
+
+
+*
+name
+
+	"
+op_55*
+val
+
+
+
+
+j
+const
+input_1_pad_type_0
+*(
+name 
+
+"
+input_1_pad_type_0*
+val
+
+
+"
+customn
+const
+input_1_pad_0
+
+
+*#
+name
+
+"
+input_1_pad_0*!
+val
+
+
+
+
+
+∫
+const6
+x_1_weight_0_to_fp16
+
+
+@
+@
+
+**
+name"
+
+"
+x_1_weight_0_to_fp16*M
+valF
+
+
+@
+@
+
+*$
+@model_path/weights/weight.bin¿ﬂí
+const"
+x_1_bias_0_to_fp16
+
+
+
+@*(
+name 
+
+"
+x_1_bias_0_to_fp16*;
+val4
+
+
+
+@*$
+@model_path/weights/weight.binÄ†	ø
+conv
+x
+
+var_50_cast_fp16"
+weight
+
+x_1_weight_0_to_fp16
+bias
+
+x_1_bias_0_to_fp16
+strides
+
+
+var_53"
+pad_type
+
+input_1_pad_type_0
+pad
+
+input_1_pad_0
+	dilations
+
+
+var_55
+groups
+
+
+var_32/
+x_1_cast_fp16
+
+
+
+@
+
+*#
+name
+
+"
+x_1_cast_fp16ñ
+add
+x
+
+x_1_cast_fp16
+y
+
+var_27_cast_fp163
+input_3_cast_fp16
+
+
+
+@
+
+*'
+name
+
+"
+input_3_cast_fp16}
+relu
+x
+
+input_3_cast_fp162
+var_64_cast_fp16
+
+
+
+@
+
+*%
+name
+
+"
+op_64_cast_fp16c
+const
+concat_0
+
+
+*
+name
+
+"
+
+concat_0* 
+val
+
+
+	
+
+¿ã
+reshape
+x
+
+var_64_cast_fp16
+shape
+
+
+concat_0'
+var_68_cast_fp16
+
+
+
+¿*%
+name
+
+"
+op_68_cast_fp16¥
+const3
+policy_head_1_weight_to_fp16
+
+
+2
+¿*2
+name*
+"
+ "
+policy_head_1_weight_to_fp16*B
+val;
+
+
+2
+¿*$
+@model_path/weights/weight.bin¿°	¢
+const*
+policy_head_1_bias_to_fp16
+
+
+
+2*0
+name(
+ 
+"
+policy_head_1_bias_to_fp16*;
+val4
+
+
+
+2*$
+@model_path/weights/weight.binÄÑø
+linear
+x
+
+var_68_cast_fp16*
+weight 
+
+policy_head_1_weight_to_fp16&
+bias
+
+policy_head_1_bias_to_fp16
+policy
+
+
+
+2*(
+name 
+
+"
+linear_0_cast_fp16≤
+const2
+value_head_1_weight_to_fp16
+
+
+
+¿*1
+name)
+!
+"
+value_head_1_weight_to_fp16*B
+val;
+
+
+
+¿*$
+@model_path/weights/weight.bin¿ÖÑ
+const)
+value_head_1_bias_to_fp16
+
+
+
+*/
+name'
+
+"
+value_head_1_bias_to_fp16*
+val
+
+
+
+
+:
+º"º
+linear
+x
+
+var_68_cast_fp16)
+weight
+
+value_head_1_weight_to_fp16%
+bias
+
+value_head_1_bias_to_fp16
+value
+
+
+
+*(
+name 
+
+"
+linear_1_cast_fp16"Â
+	buildInfo◊"
+
+
+ƒ"¡
+6
+!
+
+"
+coremltools-version
+	
+"
+7.2
+@
+)
+!
+"
+coremltools-component-torch
+
+	"
+2.2.2
+E
+(
+ 
+"
+coremltools-source-dialect
+
+"
+TorchScript

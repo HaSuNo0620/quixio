@@ -131,6 +131,14 @@ struct GameLogic {
             return possibleMoves
         }
 }
+extension Piece {
+    var player: Player? {
+        if case .mark(let owner) = self {
+            return owner
+        }
+        return nil
+    }
+}
 
 // Player enum を `OnlineGameViewModel` でも使えるように、`GameModels.swift` から移動もしくは公開アクセスレベルに変更が必要。
 // ここでは OnlineGameModels に Player を定義し直すことで対応します。

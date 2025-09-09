@@ -1,10 +1,9 @@
-// MyQuixio/AI/AIPlayer.swift をこの内容で置き換える
+// MyQuixio/AI/AIPlayer.swift
 
 import Foundation
 
 // MARK: - MCTS Node Class
 private class MCTSNode {
-    // ... (MCTSNodeのプロパティとinitは変更なし) ...
     var move: (source: (row: Int, col: Int), destination: (row: Int, col: Int))?
     var parent: MCTSNode?
     var children: [MCTSNode] = []
@@ -20,7 +19,6 @@ private class MCTSNode {
         self.parent = parent
     }
     
-    // ... (selectChildは変更なし) ...
     func selectChild() -> MCTSNode? {
         let explorationConstant: Double = 1.414
         var bestScore = -Double.infinity
@@ -41,22 +39,18 @@ private class MCTSNode {
         return bestChild
     }
     
-    // ▼▼▼【ここから修正】rollout関数を高速化 ▼▼▼
-    /// 高速化されたプレイアウト（シミュレーション）を行い、勝敗結果を返す
     func rollout() -> Player? {
         var currentBoard = self.boardState
         var turnPlayer = self.currentPlayer
         
-        // 5x5=25手以上は続かないので、ループの上限を設定して無限ループを防ぐ
         for _ in 0..<25 {
             if let winnerInfo = GameLogic.checkForWinner(on: currentBoard, playerMapping: { $0.player }) {
                 return winnerInfo.player
             }
             
-            // 高速化のキモ：全ての合法手を生成せず、ランダムに選んだ手でシミュレーション
             let moves = GameLogic.getAllPossibleMoves(for: turnPlayer, on: currentBoard)
             guard let randomMove = moves.randomElement() else {
-                return nil // 引き分け
+                return nil
             }
             
             let piece = Piece.mark(turnPlayer)
@@ -65,9 +59,8 @@ private class MCTSNode {
             turnPlayer = (turnPlayer == .circle) ? Player.cross : Player.circle
         }
         
-        return nil // 引き分け
+        return nil
     }
-    // ▲▲▲ 修正ここまで ▲▲▲
 }
 
 
@@ -80,15 +73,17 @@ class AIPlayer {
             return GameLogic.getAllPossibleMoves(for: .cross, on: board).randomElement()
         }
         
-        // ▼▼▼【ここから修正】シミュレーション回数を現実的な値に調整 ▼▼▼
+        // ▼▼▼【ここから修正】データ生成用のシミュレーション回数を追加 ▼▼▼
         let simulationCount: Int
         switch level {
         case .medium:
-            simulationCount = 1000  // 瞬時に応答
+            simulationCount = 1000
         case .hard:
-            simulationCount = 4000  // 約1秒
+            simulationCount = 4000
         case .expert:
-            simulationCount = 8000  // 約2-3秒
+            simulationCount = 8000
+//        case .forDataGeneration:  データ生成用の高速設定
+//            simulationCount = 200  大幅に回数を減らして速度を優先
         default:
             simulationCount = 1000
         }
@@ -97,7 +92,6 @@ class AIPlayer {
         return findBestMoveByMCTS(board: board, iterations: simulationCount)
     }
 
-    // ... (findBestMoveByMCTSと、ファイルの残りの部分は変更なし) ...
     private func findBestMoveByMCTS(board: [[Piece]], iterations: Int) -> (source: (row: Int, col: Int), destination: (row: Int, col: Int))? {
         let rootNode = MCTSNode(boardState: board, currentPlayer: .cross)
         
@@ -149,14 +143,5 @@ class AIPlayer {
         }
         
         return bestMove ?? GameLogic.getAllPossibleMoves(for: .cross, on: board).randomElement()
-    }
-}
-
-private extension Piece {
-    var player: Player? {
-        if case .mark(let owner) = self {
-            return owner
-        }
-        return nil
     }
 }
