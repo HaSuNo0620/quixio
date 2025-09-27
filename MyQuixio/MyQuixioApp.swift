@@ -1,39 +1,46 @@
-//
-//  MyQuixioApp.swift
-//  MyQuixio
-//
-//  Created by 東佑貴 on 2025/06/19.
-//
-
 import SwiftUI
 import FirebaseCore
 
+// Firebaseを正しく初期化するためのAppDelegate
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        FirebaseApp.configure()
+        return true
+    }
+}
+
 @main
 struct MyQuixioApp: App {
+    // AppDelegateをSwiftUIアプリのライフサイクルに接続
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
+    // アプリの状態（フォアグラウンドかバックグラウンドか）を監視
+    @Environment(\.scenePhase) private var scenePhase
     
-    // 👇 ThemeManagerのインスタンスを生成w
+    // --- ▼▼▼【ここから修正】抜けていたStateObjectを再追加 ---
+    // アプリ全体で利用するオブジェクトを生成・管理する
     @StateObject private var themeManager = ThemeManager()
-    
-    // 👇 このinit()メソッドを追加
-    init() {
-        FirebaseApp.configure()
-        print("Firebase configured!")
-        
-        print("---------- 利用可能なフォント一覧 ----------")
-                for family in UIFont.familyNames.sorted() {
-                    let names = UIFont.fontNames(forFamilyName: family)
-                    print("Family: \(family) | Font Names: \(names)")
-                }
-                print("--------------------------------------")
-    }
+    @StateObject private var gameService = GameService()   // オンライン機能用
+
     var body: some Scene {
-            WindowGroup {
-                // NavigationStackで囲むことで、NavigationLinkが機能するようになる
-                NavigationStack {
-                    MainMenuView()
-                }
-                // 👇 すべてのViewでthemeManagerを使えるようにする
+        WindowGroup {
+            NavigationStack {
+                MainMenuView()
+            }
                 .environmentObject(themeManager)
+        }
+        .onChange(of: scenePhase) { newPhase in
+            switch newPhase {
+            case .active:
+                // アプリがフォアグラウンドに戻った
+                ConnectionService.shared.goOnline(userID: gameService.currentUserID)
+            case .inactive, .background:
+                // アプリがバックグラウンドに移行した
+                ConnectionService.shared.goOffline(userID: gameService.currentUserID)
+            @unknown default:
+                break
             }
         }
+    }
 }

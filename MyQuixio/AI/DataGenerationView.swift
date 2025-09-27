@@ -7,7 +7,7 @@ import SwiftUI
 struct DataGenerationView: View {
     
     @StateObject private var selfPlayManager = SelfPlayManager()
-    @State private var numberOfGames: String = "1000" // デフォルト値を増やす
+    @State private var numberOfGames: String = "10000" // デフォルト値を増やす
 
     var body: some View {
         Form {

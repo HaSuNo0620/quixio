@@ -8,6 +8,7 @@ enum GameError: LocalizedError {
     case couldNotJoinGame
     case networkError(Error)
     case unknownError
+    case gameAlreadyJoined
 
     /// ユーザーに表示するためのエラーメッセージ
     var errorDescription: String? {
@@ -20,6 +21,8 @@ enum GameError: LocalizedError {
             return "ネットワークエラーが発生しました: \(underlyingError.localizedDescription)"
         case .unknownError:
             return "予期せぬエラーが発生しました。アプリを再起動してみてください。"
+        case .gameAlreadyJoined:
+            return "対戦に参加しています。"
         }
     }
 }

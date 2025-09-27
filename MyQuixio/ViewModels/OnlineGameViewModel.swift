@@ -226,10 +226,32 @@ class OnlineGameViewModel: ObservableObject {
     var winnerMessage: String {
         guard let game = game, game.status == .finished else { return "" }
         
-        if let winner = game.winner {
-            return winner == myTurn ? "あなたの勝利です！" : "あなたの負けです..."
+        // 自分が勝者かどうか
+        let amIWinner = game.winner == myTurn
+        
+        if amIWinner {
+            // 終了理由によってメッセージを出し分ける
+            if game.endReason == .disconnection {
+                return "相手が対戦から退出しました。\nあなたの勝ちです！"
+            } else {
+                return "あなたの勝ちです！"
+            }
+        } else {
+            // 自分が敗者
+            if game.endReason == .disconnection {
+                // 自分が切断した側（leaveGameを呼び出した側）
+                // このメッセージは基本表示されないが、念のため
+                return "対戦から退出しました。"
+            } else {
+                return "あなたの負けです..."
+            }
         }
-        return "引き分けです" // 今後引き分け処理を実装する場合
+    }
+    
+    // 新しい対戦を探すための関数
+    func findNewGame() {
+        self.game = nil // UIを即座に更新するためにローカルのゲームをリセット
+        startMatchmaking()
     }
     
     func leaveGame() {

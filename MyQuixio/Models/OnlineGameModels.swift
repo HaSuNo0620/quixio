@@ -3,10 +3,15 @@
 import Foundation
 import FirebaseFirestore
 
+enum GameEndReason: String, Codable {
+    case victory     // 通常の勝利
+    case disconnection // 相手の切断
+}
+
 // Firestoreのドキュメントに対応するモデル
 struct GameSession: Codable, Identifiable {
-    @DocumentID var id: String? // FirestoreのドキュメントIDを自動でマッピング
-    var board: [String] // "empty", "circle", "cross" のような文字列で管理
+    @DocumentID var id: String?
+    var board: [String]
     
     let hostPlayerID: String
     var guestPlayerID: String?
@@ -17,10 +22,11 @@ struct GameSession: Codable, Identifiable {
     var status: GameStatus
     var currentPlayerTurn: PlayerTurn
     var winner: PlayerTurn?
+    var endReason: GameEndReason? // ▼▼▼【ここを追加】▼▼▼
     
-    let createdAt: Timestamp // Firebaseが提供する日時型
+    let createdAt: Timestamp
     
-    // CodingKeysを使って、Swiftのプロパティ名とFirestoreのフィールド名を一致させる
+    // CodingKeysにも追加
     enum CodingKeys: String, CodingKey {
         case id
         case board
@@ -31,7 +37,19 @@ struct GameSession: Codable, Identifiable {
         case status
         case currentPlayerTurn
         case winner
+        case endReason // ▼▼▼【ここを追加】▼▼▼
         case createdAt
+    }
+}
+
+extension GameSession {
+    func myTurn(for userID: String) -> PlayerTurn? {
+        if hostPlayerID == userID {
+            return .host
+        } else if guestPlayerID == userID {
+            return .guest
+        }
+        return nil
     }
 }
 

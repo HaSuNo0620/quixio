@@ -77,13 +77,15 @@ class AIPlayer {
         let simulationCount: Int
         switch level {
         case .medium:
-            simulationCount = 1000
-        case .hard:
             simulationCount = 4000
-        case .expert:
+        case .hard:
             simulationCount = 8000
-//        case .forDataGeneration:  データ生成用の高速設定
-//            simulationCount = 200  大幅に回数を減らして速度を優先
+        case .expert:
+            simulationCount = 16000
+        #if DEBUG
+            case .forDataGeneration:
+                simulationCount = 200
+        #endif
         default:
             simulationCount = 1000
         }

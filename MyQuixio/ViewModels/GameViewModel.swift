@@ -43,7 +43,7 @@ class GameViewModel: ObservableObject {
         self.gameMode = gameMode
         self.aiLevel = .medium // デフォルト値を設定
     }
-
+    
     // (handleTap, executeMove などの他のメソッドは変更なし)
     func handleTap(onRow row: Int, col column: Int) {
         guard self.winner == nil else { return }
@@ -128,7 +128,7 @@ class GameViewModel: ObservableObject {
             return nil
         }
     }
-
+    
     func resetGame() {
         HapticManager.shared.playImpact(style: .soft)
         self.board = Array(repeating: Array(repeating: .empty, count: 5), count: 5)
@@ -158,7 +158,7 @@ class GameViewModel: ObservableObject {
             resetGame()
         }
     }
-        
+    
     private func saveCurrentState() {
         let currentState = GameState(board: self.board, currentPlayer: self.currentPlayer)
         history.append(currentState)
@@ -186,25 +186,30 @@ class GameViewModel: ObservableObject {
         }
         return ""
     }
-
+    
     func triggerAIMove() {
         guard !isAITurn, winner == nil, gameMode == .vsAI, currentPlayer == .cross else { return }
         isAITurn = true
-
+        
         Task {
             do {
                 try await Task.sleep(nanoseconds: 500_000_000)
-
-                // ▼▼▼【ここから修正】AIレベルに応じて使用するAIを切り替える ▼▼▼
+                
+                // AIレベルに応じて使用するAIを切り替える
                 let bestMove: (source: (row: Int, col: Int), destination: (row: Int, col: Int))?
                 
                 if self.aiLevel == .ultimate {
-                    bestMove = self.alphaZeroAIPlayer?.getBestMove(for: self.board, currentPlayer: .cross)
+                    // ▼▼▼【★修正箇所】▼▼▼
+                    // alphaZeroAIPlayer.getBestMoveは(move:..., policy:...)のタプルを返すようになったため、
+                    // 結果から.moveプロパティを取り出すように修正します。
+                    let result = self.alphaZeroAIPlayer?.getBestMove(for: self.board, currentPlayer: .cross)
+                    bestMove = result?.move
+                    // ▲▲▲ 修正ここまで ▲▲▲
                 } else {
+                    // こちらはMCTS AIなので、既存のコードのままでOKです。
                     bestMove = self.mctsAIPlayer.getBestMove(for: self.board, level: self.aiLevel)
                 }
-                // ▲▲▲ 修正ここまで ▲▲▲
-
+                
                 if let move = bestMove {
                     await MainActor.run {
                         self.executeMove(from: move.source, to: move.destination)

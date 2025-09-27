@@ -5,24 +5,26 @@
 import Foundation
 import Combine
 
-// MARK: - 棋譜データの構造体 (Codable)
+// MARK: - Codable Structs for Game Records
+struct Move: Codable, Hashable {
+    let source: Coordinate
+    let destination: Coordinate
+}
+
+struct Coordinate: Codable, Hashable {
+    let row: Int
+    let col: Int
+}
+
 /// 1手ごとの盤面と、その時のAIの選択、最終的な勝敗を記録するための構造体
 struct GameRecord: Codable {
     let board: [[String]] // 盤面の状態
     let player: String    // 手番のプレイヤー
-    let bestMove: Move    // AIが選択した最善手
+    // 【★修正】AIが生成した探索確率分布 (学習の正解ラベル)
+    let searchProbabilities: [String: Double]
     let outcome: String   // このゲームの最終的な勝敗 ("circle_win", "cross_win", "draw")
-    
-    struct Move: Codable {
-        let source: Coordinate
-        let destination: Coordinate
-    }
-    
-    struct Coordinate: Codable {
-        let row: Int
-        let col: Int
-    }
 }
+
 
 // MARK: - 自己対戦管理クラス
 @MainActor
@@ -41,25 +43,20 @@ class SelfPlayManager: ObservableObject {
             return
         }
         
-        // --- 状態の初期化 ---
         isRunning = true
         progress = 0.0
         statusMessage = "準備中..."
         
-        // --- ファイルパスの準備 ---
         let fileURL = createKifuFileURL()
-        // 既存のファイルを空にする
         try? "".write(to: fileURL, atomically: true, encoding: .utf8)
 
         print("Starting self-play for \(numberOfGames) games...")
         statusMessage = "生成中... (0 / \(numberOfGames))"
         
-        // --- メインの並列処理ループ ---
         await withTaskGroup(of: [GameRecord].self) { group in
             var submittedTasks = 0
             var completedGames = 0
             
-            // 新しいタスクを必要に応じて追加するヘルパー関数
             func addTaskIfNeeded() {
                 if submittedTasks < numberOfGames {
                     submittedTasks += 1
@@ -69,30 +66,22 @@ class SelfPlayManager: ObservableObject {
                 }
             }
 
-            // 最初にCPUコア数に応じたタスクを投入する
             for _ in 0..<(min(numberOfGames, ProcessInfo.processInfo.activeProcessorCount * 2)) {
                 addTaskIfNeeded()
             }
             
-            // ▼▼▼【ここから修正】エラーのあったループ処理を修正 ▼▼▼
-            // 完了したタスクの結果を処理する
             for await gameResult in group {
-                // 結果をファイルに書き込む
                 appendRecordsToFile(records: gameResult, fileURL: fileURL)
                 
                 completedGames += 1
                 
-                // UIの進捗を更新
                 self.progress = Double(completedGames) / Double(numberOfGames)
                 self.statusMessage = "生成中... (\(completedGames) / \(numberOfGames))"
                 
-                // 完了したタスクの代わりに新しいタスクを追加する
                 addTaskIfNeeded()
             }
-            // ▲▲▲ 修正ここまで ▲▲▲
         }
         
-        // --- 処理完了 ---
         statusMessage = "完了！ファイルに保存しました。"
         print("Self-play finished. Records saved to: \(fileURL.path)")
         isRunning = false
@@ -103,13 +92,14 @@ class SelfPlayManager: ObservableObject {
     /// 1回のゲームをシミュレーションし、その棋譜を返す (並列実行のためstatic)
     private static func runSingleGame() async -> [GameRecord] {
         // 各タスクでAIPlayerインスタンスを生成
-        let aiPlayer1 = AIPlayer()
-        let aiPlayer2 = AIPlayer()
+        // データ生成用のレベルを使用
+        let aiPlayer = AlphaZeroAIPlayer(level: .forDataGeneration)
         
         var board: [[Piece]] = Array(repeating: Array(repeating: .empty, count: 5), count: 5)
         var currentPlayer: Player = .circle
         var turnCount = 0
-        var movesHistory: [(board: [[Piece]], player: Player, move: (source: (row: Int, col: Int), destination: (row: Int, col: Int)))] = []
+        // 【★修正】履歴に探索確率(policy)も保存するように変更
+        var movesHistory: [(board: [[Piece]], player: Player, policy: [Move: Double])] = []
         
         // ゲーム終了までループ (最大50手で引き分け)
         while turnCount < 50 {
@@ -117,13 +107,18 @@ class SelfPlayManager: ObservableObject {
                 break
             }
             
-            let ai = (currentPlayer == .circle) ? aiPlayer1 : aiPlayer2
-            // データ生成用の高速AIレベルを使用
-            guard let bestMove = ai.getBestMove(for: board, level: .forDataGeneration) else {
-                break // AIが手を見つけられなかった場合は引き分け
+            // 【★修正】ターン数に応じて温度を決定 (序盤は多様な手を探索、中盤以降は最善手を選ぶ)
+            let temperature = (turnCount < 10) ? 0.5 : 1e-4
+            
+            // 【★修正】isTrainingをtrueにして、temperatureを渡す
+            let result = aiPlayer.getBestMove(for: board, currentPlayer: currentPlayer, isTraining: true, temperature: temperature)
+            
+            guard let bestMove = result.move else {
+                break // AIが手を見つけられなかった場合はループを抜ける
             }
             
-            movesHistory.append((board, currentPlayer, bestMove))
+            // 履歴に盤面、プレイヤー、そして探索確率(Policy)を追加
+            movesHistory.append((board, currentPlayer, result.policy))
             
             let piece = Piece.mark(currentPlayer)
             board = GameLogic.slide(board: board, from: bestMove.source, to: bestMove.destination, piece: piece)
@@ -143,21 +138,18 @@ class SelfPlayManager: ObservableObject {
         guard !records.isEmpty else { return }
         
         do {
-            // ファイルが存在しない場合は作成し、存在する場合は追記モードで開く
             let fileHandle = try FileHandle(forWritingTo: fileURL)
-            fileHandle.seekToEndOfFile() // ファイルの末尾に移動
+            fileHandle.seekToEndOfFile()
             
             let encoder = JSONEncoder()
-            // 1行1JSONオブジェクトの形式で出力 (JSONL)
             for record in records {
                 let data = try encoder.encode(record)
                 fileHandle.write(data)
-                fileHandle.write("\n".data(using: .utf8)!) // 改行で区切る
+                fileHandle.write("\n".data(using: .utf8)!)
             }
             
             fileHandle.closeFile()
         } catch {
-            // ファイルハンドルが開けない場合（ファイルがまだ存在しない初回など）
             let encoder = JSONEncoder()
             let data = records.compactMap { record -> Data? in
                 guard let encoded = try? encoder.encode(record) else { return nil }
@@ -179,20 +171,23 @@ class SelfPlayManager: ObservableObject {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd_HHmmss"
         let timestamp = formatter.string(from: Date())
-        // 拡張子をjsonl (JSON Lines) に変更
         return documentsDirectory.appendingPathComponent("kifu_\(timestamp).jsonl")
     }
     
     /// 1ゲーム分の履歴を`[GameRecord]`に変換する (並列実行のためstatic)
-    private static func processGameHistory(_ history: [(board: [[Piece]], player: Player, move: (source: (row: Int, col: Int), destination: (row: Int, col: Int)))], outcome: String) -> [GameRecord] {
+    // 【★修正】履歴の型を変更
+    private static func processGameHistory(_ history: [(board: [[Piece]], player: Player, policy: [Move: Double])], outcome: String) -> [GameRecord] {
         return history.map { record in
-            GameRecord(
+            // ポリシーのキーを[Move]から[String]に変換してJSONに保存できるようにする
+            let policyStringKeys = Dictionary(uniqueKeysWithValues: record.policy.map { (key, value) in
+                let stringKey = "\(key.source.row),\(key.source.col):\(key.destination.row),\(key.destination.col)"
+                return (stringKey, value)
+            })
+            
+            return GameRecord(
                 board: convertBoardToStringArray(record.board),
                 player: (record.player == .circle) ? "circle" : "cross",
-                bestMove: .init(
-                    source: .init(row: record.move.source.row, col: record.move.source.col),
-                    destination: .init(row: record.move.destination.row, col: record.move.destination.col)
-                ),
+                searchProbabilities: policyStringKeys,
                 outcome: outcome
             )
         }
