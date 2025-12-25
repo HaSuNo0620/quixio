@@ -4,6 +4,7 @@ import SwiftUI
 
 struct HumanOpponentSelectionView: View {
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var gameService: GameService
     
     var body: some View {
         GeometryReader { geometry in
@@ -30,7 +31,7 @@ struct HumanOpponentSelectionView: View {
                     }
                     
                     // オンライン対戦
-                    NavigationLink(destination: MatchmakingView()) {
+                    NavigationLink(destination: MatchmakingView(gameService: gameService)) {
                         VStack {
                             Image(systemName: "globe.asia.australia.fill")
                                 .font(.system(size: screenWidth * 0.15)) // 👈 icon size

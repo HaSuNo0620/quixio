@@ -3,6 +3,7 @@ import SwiftUI
 struct GameModeSelectionView: View {
     
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var gameService: GameService
     
     var body: some View {
         VStack(spacing: 20) {
@@ -25,7 +26,7 @@ struct GameModeSelectionView: View {
 
             // オンラインで対戦
             NavigationLink {
-                MatchmakingView()
+                MatchmakingView(gameService: gameService)
             } label: {
                 Text("オンラインで対戦")
                     .frame(maxWidth: .infinity)
@@ -49,5 +50,7 @@ struct GameModeSelectionView_Previews: PreviewProvider {
         NavigationView {
             GameModeSelectionView()
         }
+        .environmentObject(GameService())
+        .environmentObject(ThemeManager())
     }
 }

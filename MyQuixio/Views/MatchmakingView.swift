@@ -2,12 +2,16 @@
 import SwiftUI
 
 struct MatchmakingView: View {
-    @StateObject private var viewModel = OnlineGameViewModel()
+    @StateObject private var viewModel: OnlineGameViewModel
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var themeManager: ThemeManager
     // 経過時間タイマー用のState
     @State private var elapsedTime = 0
     @State private var timer: Timer?
+
+    init(gameService: GameService) {
+        _viewModel = StateObject(wrappedValue: OnlineGameViewModel(gameService: gameService))
+    }
     
     var body: some View {
         GeometryReader { geometry in // 👈 GeometryReaderを追加

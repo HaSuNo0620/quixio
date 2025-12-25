@@ -7,7 +7,7 @@ import FirebaseFirestore // Timestampのために必要
 
 class OnlineGameViewModel: ObservableObject {
     
-    @Published var gameService = GameService()
+    private let gameService: GameService
     @Published var game: GameSession? {
         didSet {
                    print("\n--- [\(myRoleForPrint)] Game State Did Update ---")
@@ -47,10 +47,16 @@ class OnlineGameViewModel: ObservableObject {
         return nil
     }
     
-    init() {
+    init(gameService: GameService) {
+        self.gameService = gameService
         gameService.$game
+            .receive(on: DispatchQueue.main)
             .assign(to: \.game, on: self)
             .store(in: &cancellables)
+    }
+
+    convenience init() {
+        self.init(gameService: GameService())
     }
     
     func startMatchmaking() {
