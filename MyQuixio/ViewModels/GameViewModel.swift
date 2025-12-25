@@ -60,7 +60,7 @@ class GameViewModel: ObservableObject {
                     canSelect = true
                 }
             }
-            guard self.isPeripheral(row: row, column: column) && canSelect else {
+            guard GameLogic.isPeripheral(row: row, column: column) && canSelect else {
                 SoundManager.shared.playSound(named: "error.mp3")
                 HapticManager.shared.playImpact(style: .light)
                 invalidMovePublisher.send()
@@ -114,10 +114,6 @@ class GameViewModel: ObservableObject {
         } else {
             self.currentPlayer = (self.currentPlayer == .circle) ? .cross : .circle
         }
-    }
-    
-    private func isPeripheral(row: Int, column: Int) -> Bool {
-        return row == 0 || row == 4 || column == 0 || column == 4
     }
     
     private func checkWinner() -> (player: Player, line: [(row: Int, col: Int)])? {
