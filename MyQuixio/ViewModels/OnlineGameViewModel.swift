@@ -101,7 +101,7 @@ class OnlineGameViewModel: ObservableObject {
                 }
             }
             // 盤面の周辺部でなければ選択できない
-            guard self.isPeripheral(row: row, col: col) && canSelect else {
+            guard GameLogic.isPeripheral(row: row, column: col) && canSelect else {
                 print("Invalid selection.")
                 return
             }
@@ -140,13 +140,7 @@ class OnlineGameViewModel: ObservableObject {
         
         // GameLogicのslide関数を直接使用
         let newBoard2D = GameLogic.slide(board: displayBoard, from: source, to: destination, piece: pieceToSlide)
-        let newBoard1D = newBoard2D.flatMap { $0 }.map { (piece: Piece) in
-            switch piece {
-            case .mark(.circle): return "circle"
-            case .mark(.cross): return "cross"
-            case .empty: return "empty"
-            }
-        }
+        let newBoard1D = BoardConverter.encode(newBoard2D)
 
         Task {
             // GameLogicのcheckForWinnerを直接使用
@@ -163,37 +157,13 @@ class OnlineGameViewModel: ObservableObject {
                 await gameService.updateGame(board: newBoard1D, nextTurn: nextTurn)
             }
             await MainActor.run {
-                        self.isProcessingMove = false
-                    }
+                self.isProcessingMove = false
+            }
         }
-    }
-
-    private func isPeripheral(row: Int, col: Int) -> Bool {
-        return row == 0 || row == 4 || col == 0 || col == 4
     }
     
     var displayBoard: [[Piece]] {
-        guard let board_1d = game?.board else {
-            return Array(repeating: Array(repeating: .empty, count: 5), count: 5)
-        }
-        
-        var board_2d = [[Piece]]()
-        for i in 0..<5 {
-            var row = [Piece]()
-            for j in 0..<5 {
-                let index = i * 5 + j
-                switch board_1d[index] {
-                case "circle":
-                    row.append(.mark(.circle))
-                case "cross":
-                    row.append(.mark(.cross))
-                default:
-                    row.append(.empty)
-                }
-            }
-            board_2d.append(row)
-        }
-        return board_2d
+        return BoardConverter.decode(game?.board ?? [])
     }
 
     var turnIndicatorText: String {
@@ -260,11 +230,3 @@ class OnlineGameViewModel: ObservableObject {
         }
     }
 }
-   // 便利なヘルパー拡張
-   extension Array where Element == String {
-       func to2D() -> [[String]] {
-           return stride(from: 0, to: self.count, by: 5).map {
-               Array(self[$0..<Swift.min($0 + 5, self.count)])
-           }
-       }
-   }
