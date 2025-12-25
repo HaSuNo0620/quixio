@@ -29,6 +29,10 @@ struct MyQuixioApp: App {
                 MainMenuView()
             }
                 .environmentObject(themeManager)
+                .environmentObject(gameService)
+                .task {
+                    ConnectionService.shared.goOnline(userID: gameService.currentUserID)
+                }
         }
         .onChange(of: scenePhase) { newPhase in
             switch newPhase {
