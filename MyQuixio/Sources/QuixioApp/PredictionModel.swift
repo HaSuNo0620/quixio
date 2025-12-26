@@ -26,10 +26,24 @@ class PredictionModel {
     ///   - board: 現在の盤面 `[[Piece]]`
     ///   - currentPlayer: 現在の手番プレイヤー `Player`
     /// - Returns: (ポリシーの配列, バリュー) のタプル。予測に失敗した場合はnil。
+    // 機能: Core MLモデルを呼び出し、手の確率分布と勝率を推論する。
+    // 備考: modelがnilの場合でも一様分布と中立バリューを返すフォールバックを実装。
+    // 追加提案: モデル未ロード時に単純AIやランダム手に切り替えるフェイルセーフを実装。
     func predict(board: [[Piece]], currentPlayer: Player) -> (policy: [Double], value: Double)? {
         guard let model = model else {
             print("Model is not loaded.")
-            return nil
+            // 簡易AI: 合法手を均等確率で返す
+            let legalMoves = GameLogic.getAllPossibleMoves(for: currentPlayer, on: board, allowPushingOpponent: true)
+            guard !legalMoves.isEmpty else { return nil }
+            let fallbackProbability = 1.0 / Double(legalMoves.count)
+            var fallbackPolicy = Array(repeating: 0.0, count: board.count * (board.first?.count ?? 0))
+            for move in legalMoves {
+                let index = move.source.row * (board.first?.count ?? 0) + move.source.col
+                if index < fallbackPolicy.count {
+                    fallbackPolicy[index] = fallbackProbability
+                }
+            }
+            return (policy: fallbackPolicy, value: 0.0)
         }
         
         do {
@@ -56,6 +70,8 @@ class PredictionModel {
     }
     
     /// 盤面データをMLMultiArrayに変換するヘルパー関数
+    // 機能: 盤面をチャネル付きテンソルに整形してモデル入力を生成。未知のPieceが来ても0で初期化。
+    // 追加提案: チャンネル構成を外部設定化し、盤サイズやプレイヤー種別に合わせて可変にすると再利用性が向上。
     private func convertBoardToMLMultiArray(board: [[Piece]], currentPlayer: Player) throws -> MLMultiArray {
         // モデルの入力形状は (1, 3, 5, 5) -> 1はバッチサイズ, 3はチャンネル, 5x5は盤面
         let multiArray = try MLMultiArray(shape: [1, 3, 5, 5], dataType: .float32)
@@ -80,6 +96,9 @@ class PredictionModel {
                     multiArray[index1] = 0.0
                     multiArray[index2] = 1.0
                 case .empty:
+                    multiArray[index1] = 0.0
+                    multiArray[index2] = 0.0
+                @unknown default:
                     multiArray[index1] = 0.0
                     multiArray[index2] = 0.0
                 }

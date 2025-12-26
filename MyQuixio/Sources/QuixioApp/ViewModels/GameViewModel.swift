@@ -60,7 +60,9 @@ class GameViewModel: ObservableObject {
                     canSelect = true
                 }
             }
-            guard GameLogic.isPeripheral(row: row, column: column) && canSelect else {
+            let boardSize = board.count
+            let colCount = board.first?.count ?? boardSize
+            guard GameLogic.isPeripheral(row: row, column: column, rowCount: boardSize, colCount: colCount) && canSelect else {
                 SoundManager.shared.playSound(named: "error.mp3")
                 HapticManager.shared.playImpact(style: .light)
                 invalidMovePublisher.send()
@@ -78,10 +80,14 @@ class GameViewModel: ObservableObject {
                 return
             }
             
+            let boardSize = board.count
+            let colCount = board.first?.count ?? boardSize
+            let lastRow = max(boardSize - 1, 0)
+            let lastCol = max(colCount - 1, 0)
             let isSameRow = (source.row == destination.row)
             let isSameCol = (source.col == destination.col)
-            let isDestinationOnHorizontalEdge = (destination.col == 0 || destination.col == 4)
-            let isDestinationOnVerticalEdge = (destination.row == 0 || destination.row == 4)
+            let isDestinationOnHorizontalEdge = (destination.col == 0 || destination.col == lastCol)
+            let isDestinationOnVerticalEdge = (destination.row == 0 || destination.row == lastRow)
             let isValidRowMove = isSameRow && isDestinationOnHorizontalEdge
             let isValidColMove = isSameCol && isDestinationOnVerticalEdge
             
