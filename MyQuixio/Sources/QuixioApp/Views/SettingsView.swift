@@ -81,12 +81,15 @@ struct SettingsView: View {
     }
 }
 #if DEBUG
-private var developerSection: some View {
-    Section(header: Text("開発者向け機能")) {
-        NavigationLink(destination: DataGenerationView()) {
-            HStack {
-                Image(systemName: "doc.text.fill")
-                Text("教師データ生成")
+extension SettingsView {
+    @ViewBuilder
+    fileprivate var developerSection: some View {
+        Section(header: Text("開発者向け機能")) {
+            NavigationLink(destination: DataGenerationView()) {
+                HStack {
+                    Image(systemName: "doc.text.fill")
+                    Text("教師データ生成")
+                }
             }
         }
     }
