@@ -18,7 +18,7 @@ class GameViewModel: ObservableObject {
     @Published var isAITurn: Bool = false
     @Published var winningLine: [(row: Int, col: Int)]? = nil
     @Published var aiLevel: AILevel
-    @Published private var history: [GameState] = []
+    private let historyStore: GameHistoryStore
     
     // ▼▼▼【ここから修正】AIプレイヤーのインスタンスを2種類保持するように変更 ▼▼▼
     private let mctsAIPlayer = AIPlayer()
@@ -28,20 +28,23 @@ class GameViewModel: ObservableObject {
     let invalidMovePublisher = PassthroughSubject<Void, Never>()
     
     // vs AIモードとAIレベルを引数で受け取るイニシャライザ
-    init(gameMode: GameMode, aiLevel: AILevel) {
+    init(gameMode: GameMode, aiLevel: AILevel, historyStore: GameHistoryStore = InMemoryGameHistoryStore()) {
         self.gameMode = gameMode
         self.aiLevel = aiLevel
+        self.historyStore = historyStore
         // ▼▼▼【ここから追加】AIレベルがultimateなら、AlphaZeroAIを初期化する ▼▼▼
         if aiLevel == .ultimate {
-            self.alphaZeroAIPlayer = AlphaZeroAIPlayer(level: aiLevel)
+            let config = AlphaZeroConfig.forLevel(aiLevel)
+            self.alphaZeroAIPlayer = AlphaZeroAIPlayer(config: config)
         }
         // ▲▲▲ 追加ここまで ▲▲▲
     }
     
     // vs 人モード用のイニシャライザ
-    init(gameMode: GameMode) {
+    init(gameMode: GameMode, historyStore: GameHistoryStore = InMemoryGameHistoryStore()) {
         self.gameMode = gameMode
         self.aiLevel = .medium // デフォルト値を設定
+        self.historyStore = historyStore
     }
     
     // (handleTap, executeMove などの他のメソッドは変更なし)
@@ -138,17 +141,17 @@ class GameViewModel: ObservableObject {
         self.selectedCoordinate = nil
         self.winner = nil
         self.winningLine = nil
-        self.history = []
+        self.historyStore.reset()
     }
     
     func undoMove() {
-        guard !history.isEmpty else { return }
+        guard !historyStore.isEmpty else { return }
         var stateToRestore: GameState?
         if gameMode == .vsAI && !isAITurn {
-            history.popLast()
-            stateToRestore = history.popLast()
+            _ = historyStore.pop()
+            stateToRestore = historyStore.pop()
         } else {
-            stateToRestore = history.popLast()
+            stateToRestore = historyStore.pop()
         }
         if let state = stateToRestore {
             self.board = state.board
@@ -163,7 +166,7 @@ class GameViewModel: ObservableObject {
     
     private func saveCurrentState() {
         let currentState = GameState(board: self.board, currentPlayer: self.currentPlayer)
-        history.append(currentState)
+        historyStore.push(currentState)
     }
     
     private func slide(from: (row: Int, col: Int), to: (row: Int, col: Int)) {

@@ -52,17 +52,15 @@ private class AlphaZeroNode {
 class AlphaZeroAIPlayer {
     
     private let predictionModel = PredictionModel.shared
-    private let iterations: Int
+    private let config: AlphaZeroConfig
     private let allowPushingOpponent = false // ルールに合わせて相手駒を押さない合法手のみを探索
 
-    init(level: AILevel) {
-        switch level {
-        case .ultimate:
-            self.iterations = 2000 // 高速な思考
-        default:
-            // .forDataGeneration やその他レベル
-            self.iterations = 200
-        }
+    init(config: AlphaZeroConfig) {
+        self.config = config
+    }
+
+    convenience init(level: AILevel) {
+        self.init(config: AlphaZeroConfig.forLevel(level))
     }
     
     /// - Parameters:
@@ -75,8 +73,9 @@ class AlphaZeroAIPlayer {
         for board: [[Piece]],
         currentPlayer: Player,
         isTraining: Bool = false,
-        temperature: Double = 0.0
+        temperature: Double? = nil
     ) -> (move: (source: (row: Int, col: Int), destination: (row: Int, col: Int))?, policy: [Move: Double]) {
+        let resolvedTemperature = temperature ?? config.temperature
         
         let rootNode = AlphaZeroNode(boardState: board, currentPlayer: currentPlayer, priorProbability: 1.0)
         
@@ -84,11 +83,11 @@ class AlphaZeroAIPlayer {
         expandAndEvaluate(node: rootNode)
         
         // 【★修正】自己対戦（学習）時のみ、探索の多様性を確保するためにルートノードにディリクレノイズを追加
-        if isTraining {
+        if isTraining || config.addDirichletNoise {
             addDirichletNoise(to: rootNode)
         }
         
-        for _ in 0..<iterations {
+        for _ in 0..<config.iterations {
             var node = rootNode
             
             // 1. Selection - UCBスコアが最も高いノードを末端まで選択
@@ -108,7 +107,7 @@ class AlphaZeroAIPlayer {
         }
         
         // 【★修正】最終的な手の選択と探索確率の計算
-        let (bestMove, policy) = selectMoveAndCreatePolicy(from: rootNode, temperature: temperature)
+        let (bestMove, policy) = selectMoveAndCreatePolicy(from: rootNode, temperature: resolvedTemperature)
         
         // 万が一手が選択できなかった場合のフォールバック
         guard let finalMove = bestMove else {
