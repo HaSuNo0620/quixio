@@ -6,7 +6,7 @@ struct CellView: View {
     
     @EnvironmentObject var themeManager: ThemeManager
     
-    let piece: Piece
+    let piece: any PieceDisplayable
     let isSelected: Bool
     let onTap: () -> Void
 
@@ -38,7 +38,7 @@ struct CellView: View {
         // paddingを計算
         let padding = size.width * 0.15
 
-        if let player = piece.player {
+        if let player = piece.displayPlayer {
             let symbolName = player == .circle ? "circle" : "xmark"
             let symbolColor = player == .circle ? themeManager.currentTheme.circleColor : themeManager.currentTheme.crossColor
 

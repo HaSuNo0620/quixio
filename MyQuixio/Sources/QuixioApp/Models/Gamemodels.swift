@@ -13,6 +13,34 @@ enum Piece: Equatable {
     case mark(Player)
 }
 
+protocol PieceDisplayable {
+    var displayPlayer: Player? { get }
+}
+
+extension Piece: PieceDisplayable {
+    var displayPlayer: Player? {
+        switch self {
+        case .mark(let owner):
+            return owner
+        case .empty:
+            return nil
+        }
+    }
+}
+
+extension String: PieceDisplayable {
+    var displayPlayer: Player? {
+        switch self {
+        case "circle":
+            return .circle
+        case "cross":
+            return .cross
+        default:
+            return nil
+        }
+    }
+}
+
 enum GameMode {
     case vsHuman
     case vsAI
