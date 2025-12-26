@@ -1,8 +1,7 @@
 // MyQuixio/Views/DataGenerationView.swift
 
-#if DEBUG
-
 import SwiftUI
+import UIKit
 
 struct DataGenerationView: View {
     
@@ -86,5 +85,3 @@ struct DataGenerationView_Previews: PreviewProvider {
         }
     }
 }
-
-#endif
