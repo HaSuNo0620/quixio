@@ -1,7 +1,9 @@
 // MyQuixio/Views/DataGenerationView.swift
 
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 
 struct DataGenerationView: View {
     
@@ -74,10 +76,18 @@ struct DataGenerationView: View {
              }
         }
         .navigationTitle("教師データ生成")
-        .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.inline)
     }
 }
 
+#if !DEBUG
+// リリースビルドでもシンボル解決できるようにプレースホルダーを用意
+struct DataGenerationView_Previews: PreviewProvider {
+    static var previews: some View {
+        Text("DataGenerationView is unavailable in this build.")
+    }
+}
+#else
 struct DataGenerationView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -85,3 +95,4 @@ struct DataGenerationView_Previews: PreviewProvider {
         }
     }
 }
+#endif
