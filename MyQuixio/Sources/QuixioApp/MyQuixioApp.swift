@@ -3,6 +3,7 @@ import FirebaseCore
 
 // Firebaseを正しく初期化するためのAppDelegate
 class AppDelegate: NSObject, UIApplicationDelegate {
+    // 機能: アプリ起動時にFirebaseを初期化するエントリポイント。
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         FirebaseApp.configure()
@@ -24,6 +25,7 @@ struct MyQuixioApp: App {
     @StateObject private var gameService = GameService()   // オンライン機能用
 
     var body: some Scene {
+        // 機能: ルートのWindowGroupを定義し、環境オブジェクトを注入。
         WindowGroup {
             NavigationStack {
                 MainMenuView()
@@ -31,17 +33,25 @@ struct MyQuixioApp: App {
                 .environmentObject(themeManager)
                 .environmentObject(gameService)
                 .task {
-                    ConnectionService.shared.goOnline(userID: gameService.currentUserID)
+                    // 追加提案: ネットワーク切断時のリトライ処理をタスクで監視すると更に安定。
+                    let userID = gameService.currentUserID.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !userID.isEmpty else { return }
+                    ConnectionService.shared.goOnline(userID: userID)
                 }
         }
         .onChange(of: scenePhase) { newPhase in
+            // 機能: アプリ状態の変化に応じて接続ステータスを更新。
             switch newPhase {
             case .active:
                 // アプリがフォアグラウンドに戻った
-                ConnectionService.shared.goOnline(userID: gameService.currentUserID)
+                let userID = gameService.currentUserID.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !userID.isEmpty else { return }
+                ConnectionService.shared.goOnline(userID: userID)
             case .inactive, .background:
                 // アプリがバックグラウンドに移行した
-                ConnectionService.shared.goOffline(userID: gameService.currentUserID)
+                let userID = gameService.currentUserID.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !userID.isEmpty else { return }
+                ConnectionService.shared.goOffline(userID: userID)
             @unknown default:
                 break
             }

@@ -53,7 +53,8 @@ class AlphaZeroAIPlayer {
     
     private let predictionModel = PredictionModel.shared
     private let iterations: Int
-    
+    private let allowPushingOpponent = false // ルールに合わせて相手駒を押さない合法手のみを探索
+
     init(level: AILevel) {
         switch level {
         case .ultimate:
@@ -111,7 +112,7 @@ class AlphaZeroAIPlayer {
         
         // 万が一手が選択できなかった場合のフォールバック
         guard let finalMove = bestMove else {
-            let randomMove = GameLogic.getAllPossibleMoves(for: currentPlayer, on: board).randomElement()
+            let randomMove = GameLogic.getAllPossibleMoves(for: currentPlayer, on: board, allowPushingOpponent: allowPushingOpponent).randomElement()
             return (randomMove, [:])
         }
         
@@ -127,11 +128,21 @@ class AlphaZeroAIPlayer {
         
         // NNで予測
         guard let prediction = predictionModel.predict(board: node.boardState, currentPlayer: node.currentPlayer) else {
-            return 0.0 // 予測失敗時は価値0
+            // モデル未ロード時は一様分布のポリシーで展開し、価値は中立とする
+            let fallbackMoves = GameLogic.getAllPossibleMoves(for: node.currentPlayer, on: node.boardState, allowPushingOpponent: allowPushingOpponent)
+            if fallbackMoves.isEmpty { return 0.0 }
+            let prior = 1.0 / Double(fallbackMoves.count)
+            for move in fallbackMoves {
+                let nextPlayer = (node.currentPlayer == .cross) ? Player.circle : Player.cross
+                let newBoard = GameLogic.slide(board: node.boardState, from: move.source, to: move.destination, piece: .mark(node.currentPlayer))
+                let newNode = AlphaZeroNode(boardState: newBoard, currentPlayer: nextPlayer, priorProbability: prior, move: move, parent: node)
+                node.children.append(newNode)
+            }
+            return 0.0
         }
         
         // Expansion: 合法手に対応する子ノードを作成
-        let legalMoves = GameLogic.getAllPossibleMoves(for: node.currentPlayer, on: node.boardState)
+        let legalMoves = GameLogic.getAllPossibleMoves(for: node.currentPlayer, on: node.boardState, allowPushingOpponent: allowPushingOpponent)
         if legalMoves.isEmpty {
              return 0.0 // 手がない場合は引き分け
         }

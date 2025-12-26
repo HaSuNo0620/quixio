@@ -107,7 +107,9 @@ class OnlineGameViewModel: ObservableObject {
                 }
             }
             // 盤面の周辺部でなければ選択できない
-            guard GameLogic.isPeripheral(row: row, column: col) && canSelect else {
+            let boardSize = displayBoard.count
+            let colCount = displayBoard.first?.count ?? boardSize
+            guard GameLogic.isPeripheral(row: row, column: col, rowCount: boardSize, colCount: colCount) && canSelect else {
                 print("Invalid selection.")
                 return
             }
@@ -118,10 +120,14 @@ class OnlineGameViewModel: ObservableObject {
             let destination = (row: row, col: col)
             
             // 既存のGameViewModelのロジックと同様に、有効な移動かチェック
+            let boardSize = displayBoard.count
+            let colCount = displayBoard.first?.count ?? boardSize
+            let lastRow = max(boardSize - 1, 0)
+            let lastCol = max(colCount - 1, 0)
             let isSameRow = (source.row == destination.row)
             let isSameCol = (source.col == destination.col)
-            let isDestinationOnHorizontalEdge = (destination.col == 0 || destination.col == 4)
-            let isDestinationOnVerticalEdge = (destination.row == 0 || destination.row == 4)
+            let isDestinationOnHorizontalEdge = (destination.col == 0 || destination.col == lastCol)
+            let isDestinationOnVerticalEdge = (destination.row == 0 || destination.row == lastRow)
             let isValidRowMove = isSameRow && isDestinationOnHorizontalEdge
             let isValidColMove = isSameCol && isDestinationOnVerticalEdge
             

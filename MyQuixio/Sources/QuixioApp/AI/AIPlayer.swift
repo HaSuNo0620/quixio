@@ -11,10 +11,12 @@ private class MCTSNode {
     var visits: Int = 0
     var boardState: [[Piece]]
     var currentPlayer: Player
+    let allowPushingOpponent: Bool
 
-    init(boardState: [[Piece]], currentPlayer: Player, move: (source: (row: Int, col: Int), destination: (row: Int, col: Int))? = nil, parent: MCTSNode? = nil) {
+    init(boardState: [[Piece]], currentPlayer: Player, allowPushingOpponent: Bool, move: (source: (row: Int, col: Int), destination: (row: Int, col: Int))? = nil, parent: MCTSNode? = nil) {
         self.boardState = boardState
         self.currentPlayer = currentPlayer
+        self.allowPushingOpponent = allowPushingOpponent
         self.move = move
         self.parent = parent
     }
@@ -48,7 +50,7 @@ private class MCTSNode {
                 return winnerInfo.player
             }
             
-            let moves = GameLogic.getAllPossibleMoves(for: turnPlayer, on: currentBoard)
+            let moves = GameLogic.getAllPossibleMoves(for: turnPlayer, on: currentBoard, allowPushingOpponent: allowPushingOpponent)
             guard let randomMove = moves.randomElement() else {
                 return nil
             }
@@ -67,10 +69,12 @@ private class MCTSNode {
 // MARK: - AIPlayer Class (MCTS Implementation)
 class AIPlayer {
 
+    private let allowPushingOpponent = false // ルールに合わせて相手駒を押さない合法手のみを探索
+
     func getBestMove(for board: [[Piece]], level: AILevel) -> (source: (row: Int, col: Int), destination: (row: Int, col: Int))? {
         
         if level == .easy {
-            return GameLogic.getAllPossibleMoves(for: .cross, on: board).randomElement()
+            return GameLogic.getAllPossibleMoves(for: .cross, on: board, allowPushingOpponent: allowPushingOpponent).randomElement()
         }
         
         // ▼▼▼【ここから修正】データ生成用のシミュレーション回数を追加 ▼▼▼
@@ -95,7 +99,7 @@ class AIPlayer {
     }
 
     private func findBestMoveByMCTS(board: [[Piece]], iterations: Int) -> (source: (row: Int, col: Int), destination: (row: Int, col: Int))? {
-        let rootNode = MCTSNode(boardState: board, currentPlayer: .cross)
+        let rootNode = MCTSNode(boardState: board, currentPlayer: .cross, allowPushingOpponent: allowPushingOpponent)
         
         for _ in 0..<iterations {
             var node = rootNode
@@ -107,12 +111,12 @@ class AIPlayer {
                 }
             }
             
-            let possibleMoves = GameLogic.getAllPossibleMoves(for: node.currentPlayer, on: node.boardState)
+            let possibleMoves = GameLogic.getAllPossibleMoves(for: node.currentPlayer, on: node.boardState, allowPushingOpponent: allowPushingOpponent)
             if !possibleMoves.isEmpty && GameLogic.checkForWinner(on: node.boardState, playerMapping: { $0.player }) == nil {
                 for move in possibleMoves {
                     let nextPlayer = (node.currentPlayer == .cross) ? Player.circle : Player.cross
                     let newBoard = GameLogic.slide(board: node.boardState, from: move.source, to: move.destination, piece: .mark(node.currentPlayer))
-                    let newNode = MCTSNode(boardState: newBoard, currentPlayer: nextPlayer, move: move, parent: node)
+                    let newNode = MCTSNode(boardState: newBoard, currentPlayer: nextPlayer, allowPushingOpponent: allowPushingOpponent, move: move, parent: node)
                     node.children.append(newNode)
                 }
             }
@@ -144,6 +148,6 @@ class AIPlayer {
             }
         }
         
-        return bestMove ?? GameLogic.getAllPossibleMoves(for: .cross, on: board).randomElement()
+        return bestMove ?? GameLogic.getAllPossibleMoves(for: .cross, on: board, allowPushingOpponent: allowPushingOpponent).randomElement()
     }
 }
