@@ -3,17 +3,20 @@
 import Foundation
 import FirebaseFirestore
 import FirebaseDatabase
+import Combine
 
 class GameService: ObservableObject {
 
     // MARK: - Properties
     @Published var game: GameSession?
+    @Published var isOpponentOnline: Bool = true
+    @Published var opponentReconnectRemaining: Int?
 
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?
     
     private var opponentConnectionHandle: DatabaseHandle?
-    private var disconnectionTimer: Timer?
+    private var reconnectCountdownTimer: Timer?
 
     var currentUserID: String {
             let userIDKey = "myQuixio.persistentUserID"
@@ -248,17 +251,16 @@ class GameService: ObservableObject {
 
             if isOnline {
                 print("Opponent \(opponentID) is online.")
-                // タイマーが作動中ならキャンセル
-                self.disconnectionTimer?.invalidate()
-                self.disconnectionTimer = nil
+                DispatchQueue.main.async {
+                    self.isOpponentOnline = true
+                    self.opponentReconnectRemaining = nil
+                }
+                self.stopReconnectCountdown()
             } else {
                 print("Opponent \(opponentID) went offline. Starting 30-second timer.")
-                // 相手がオフラインになったら、30秒の猶予タイマーを開始
-                self.disconnectionTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { _ in
-                    print("Opponent did not reconnect in time. Ending game.")
-                    Task {
-                        await self.handleOpponentDisconnection()
-                    }
+                DispatchQueue.main.async {
+                    self.isOpponentOnline = false
+                    self.startReconnectCountdown()
                 }
             }
         }
@@ -270,10 +272,37 @@ class GameService: ObservableObject {
             ConnectionService.shared.removeObserver(with: handle, for: opponentID)
             self.opponentConnectionHandle = nil
         }
-        disconnectionTimer?.invalidate()
-        disconnectionTimer = nil
+        stopReconnectCountdown()
+        DispatchQueue.main.async {
+            self.isOpponentOnline = true
+            self.opponentReconnectRemaining = nil
+        }
     }
-    
+
+    private func startReconnectCountdown() {
+        stopReconnectCountdown()
+        opponentReconnectRemaining = 30
+        reconnectCountdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else { return }
+            guard var remaining = self.opponentReconnectRemaining else { return }
+            remaining -= 1
+            DispatchQueue.main.async {
+                self.opponentReconnectRemaining = max(remaining, 0)
+            }
+            if remaining <= 0 {
+                timer.invalidate()
+                Task {
+                    await self.handleOpponentDisconnection()
+                }
+            }
+        }
+    }
+
+    private func stopReconnectCountdown() {
+        reconnectCountdownTimer?.invalidate()
+        reconnectCountdownTimer = nil
+    }
+
     private func handleOpponentDisconnection() async {
         guard let game = game, game.status == .in_progress else { return }
         

@@ -23,6 +23,8 @@ struct MyQuixioApp: App {
     // アプリ全体で利用するオブジェクトを生成・管理する
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var gameService = GameService()   // オンライン機能用
+    @StateObject private var soundManager = SoundManager.shared
+    @StateObject private var hapticManager = HapticManager.shared
 
     var body: some Scene {
         // 機能: ルートのWindowGroupを定義し、環境オブジェクトを注入。
@@ -32,6 +34,8 @@ struct MyQuixioApp: App {
             }
                 .environmentObject(themeManager)
                 .environmentObject(gameService)
+                .environmentObject(soundManager)
+                .environmentObject(hapticManager)
                 .task {
                     // 追加提案: ネットワーク切断時のリトライ処理をタスクで監視すると更に安定。
                     let userID = gameService.currentUserID.trimmingCharacters(in: .whitespacesAndNewlines)

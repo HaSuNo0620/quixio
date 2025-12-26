@@ -14,6 +14,11 @@ class SoundManager: ObservableObject {
             UserDefaults.standard.set(isSoundEnabled, forKey: "isSoundEnabled")
         }
     }
+    @Published var isMusicEnabled: Bool = UserDefaults.standard.object(forKey: "isMusicEnabled") as? Bool ?? false {
+        didSet {
+            UserDefaults.standard.set(isMusicEnabled, forKey: "isMusicEnabled")
+        }
+    }
 
     private init() {} // シングルトンを保証するためにprivateにする
 

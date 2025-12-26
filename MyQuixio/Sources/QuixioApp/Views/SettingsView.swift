@@ -4,11 +4,9 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var soundManager: SoundManager
+    @EnvironmentObject var hapticManager: HapticManager
     @Environment(\.dismiss) var dismiss
-    
-    // サウンド設定の状態を管理するための仮の変数
-    @State private var areSoundEffectsOn = true
-    @State private var isMusicOn = false
 
     var body: some View {
         // ZStackを使い、背景色とリストを明確に分離する
@@ -64,8 +62,9 @@ struct SettingsView: View {
             header: Text("サウンド")
                 .foregroundColor(themeManager.currentTheme.textColor) // ヘッダーの色を明示的に指定
         ) {
-            Toggle("効果音", isOn: $areSoundEffectsOn)
-            Toggle("BGM", isOn: $isMusicOn)
+            Toggle("効果音", isOn: $soundManager.isSoundEnabled)
+            Toggle("BGM", isOn: $soundManager.isMusicEnabled)
+            Toggle("バイブレーション", isOn: $hapticManager.isHapticsEnabled)
         }
         .listRowBackground(themeManager.currentTheme.cellColor)
         .foregroundColor(themeManager.currentTheme.textColor) // Toggleのラベル色を設定
@@ -102,5 +101,7 @@ struct SettingsView_Previews: PreviewProvider {
             SettingsView()
         }
         .environmentObject(ThemeManager())
+        .environmentObject(SoundManager.shared)
+        .environmentObject(HapticManager.shared)
     }
 }

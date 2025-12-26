@@ -24,6 +24,8 @@ class OnlineGameViewModel: ObservableObject {
     @Published var showErrorAlert = false
     @Published var errorMessage = ""
     @Published private var isProcessingMove = false
+    @Published var isOpponentOnline: Bool = true
+    @Published var opponentReconnectRemaining: Int?
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -52,6 +54,14 @@ class OnlineGameViewModel: ObservableObject {
         gameService.$game
             .receive(on: DispatchQueue.main)
             .assign(to: \.game, on: self)
+            .store(in: &cancellables)
+        gameService.$isOpponentOnline
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isOpponentOnline, on: self)
+            .store(in: &cancellables)
+        gameService.$opponentReconnectRemaining
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.opponentReconnectRemaining, on: self)
             .store(in: &cancellables)
     }
 

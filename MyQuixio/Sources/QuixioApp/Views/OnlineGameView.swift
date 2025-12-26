@@ -12,10 +12,21 @@ struct OnlineGameView: View {
             VStack(spacing: 10) {
                 Spacer()
                 Text(viewModel.turnIndicatorText)
-                    .font(.title3).fontWeight(.bold).foregroundColor(Color("TextColor"))
-                    .padding(.horizontal).multilineTextAlignment(.center).frame(height: 50)
-                //                    .flip(isFlipped: viewModel.game?.currentPlayerTurn != viewModel.myTurn) // 自分のターンかどうかで反転
+                    .font(.title3)
+                    .fontWeight(.bold)
+                    .foregroundColor(Color("TextColor"))
+                    .padding(.horizontal)
+                    .multilineTextAlignment(.center)
+                    .frame(height: 50)
+                    //                    .flip(isFlipped: viewModel.game?.currentPlayerTurn != viewModel.myTurn) // 自分のターンかどうかで反転
                     .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.game?.currentPlayerTurn) // ターン変更でアニメーション
+
+                if !viewModel.isOpponentOnline {
+                    Text(reconnectText)
+                        .font(.subheadline)
+                        .foregroundColor(.orange)
+                        .padding(.bottom, 4)
+                }
                 
                 // ここで$viewModel.displayBoardではなく、viewModel.displayBoardとして渡す
                 GameBoardView(
@@ -39,7 +50,8 @@ struct OnlineGameView: View {
                 
                 VStack(spacing: 20) {
                     Text(viewModel.winnerMessage)
-                        .font(.title).fontWeight(.bold)
+                        .font(.title)
+                        .fontWeight(.bold)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                         .padding()
@@ -75,16 +87,23 @@ struct OnlineGameView: View {
                 .padding(.horizontal, 40)
             }
         }
-            
-            .navigationBarBackButtonHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("対戦をやめる") { dismiss() }
-                }
-            }
-            .alert(isPresented: $viewModel.showErrorAlert) {
-                Alert(title: Text("エラー"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("OK")))
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("対戦をやめる") { dismiss() }
             }
         }
+        .alert(isPresented: $viewModel.showErrorAlert) {
+            Alert(title: Text("エラー"), message: Text(viewModel.errorMessage), dismissButton: .default(Text("OK")))
+        }
     }
+
+    private var reconnectText: String {
+        if let remaining = viewModel.opponentReconnectRemaining {
+            return "相手の接続が不安定です。\(remaining)秒以内に復帰しない場合は勝利になります。"
+        } else {
+            return "相手の接続が不安定です。"
+        }
+    }
+}
 
