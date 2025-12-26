@@ -48,4 +48,3 @@ enum AILevel: String, CaseIterable {
         }
     }
 }
-
