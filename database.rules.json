@@ -1,0 +1,56 @@
+{
+  "rules": {
+    "rooms": {
+      ".read": true,
+      "$roomId": {
+        ".write": true,
+
+        "board": {
+          ".validate": "newData.isString() && newData.val().length === 25"
+        },
+        "currentPlayer": {
+          ".validate": "newData.isString() && (newData.val() === 'X' || newData.val() === 'O')"
+        },
+        "status": {
+          ".validate": "newData.isString() && (newData.val() === 'waiting' || newData.val() === 'playing' || newData.val() === 'finished' || newData.val() === 'abandoned')"
+        },
+        "hostUid": {
+          ".validate": "newData.isString() && newData.val().length >= 6"
+        },
+        "guestUid": {
+          ".validate": "!newData.exists() || newData.val() === null || (newData.isString() && newData.val().length >= 6)"
+        },
+        "winner": {
+          ".validate": "!newData.exists() || newData.val() === null || (newData.isString() && (newData.val() === 'X' || newData.val() === 'O'))"
+        },
+        "winningLine": {
+          ".validate": "!newData.exists() || newData.val() === null || newData.isString()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": true
+        }
+      }
+    },
+    "queue": {
+      ".read": true,
+      ".write": true,
+      "$uid": {
+        "roomCode": {
+          ".validate": "newData.isString() && newData.val().length === 6"
+        },
+        "uid": {
+          ".validate": "newData.isString() && newData.val().length >= 6"
+        },
+        "joinedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": true
+        }
+      }
+    }
+  }
+}

@@ -1,62 +1,78 @@
 import { registerRootComponent } from 'expo';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
+import { useFonts, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
+import * as SplashScreen from 'expo-splash-screen';
 import StartScreen from './screens/StartScreen';
 import QuixioScreenPvP from './screens/QuixioScreenPvP';
 import QuixioScreenAI from './screens/QuixioScreenAI';
 import RulesScreen from './screens/RulesScreen';
+import OnlineScreen from './screens/OnlineScreen';
 import { ThemeProvider } from './components/ThemeConfig';
+import { AudioProvider } from './components/AudioContext';
+
+SplashScreen.preventAutoHideAsync();
 
 const Stack = createStackNavigator();
 
 function App() {
+  const [fontsLoaded, fontsError] = useFonts({
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
+  });
+
+  useEffect(() => {
+    if (fontsLoaded || fontsError) SplashScreen.hideAsync();
+  }, [fontsLoaded, fontsError]);
+
+  if (!fontsLoaded && !fontsError) return null;
+
   return (
-    <ThemeProvider>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="StartScreen" screenOptions={{ headerShown: false }}>
-          {/* タイトル画面 → ゲーム画面: 左から右 */}
-          <Stack.Screen 
-            name="StartScreen" 
-            component={StartScreen} 
-            options={{
-              gestureDirection: "horizontal-inverted",
-              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, 
-            }} 
-          />
-
-          {/* ゲーム画面 → タイトル画面: 右から左 */}
-          <Stack.Screen 
-            name="QuixioScreenAI" 
-            component={QuixioScreenAI} 
-            options={{
-              gestureDirection: "horizontal", 
-              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, 
-            }} 
-          />
-        
-          {/* ゲーム画面 → タイトル画面: 右から左 */}
-          <Stack.Screen 
-            name="QuixioScreenPvP" 
-            component={QuixioScreenPvP} 
-            options={{
-              gestureDirection: "horizontal", 
-              cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, 
-            }} 
-          />
-
-          {/* ルール画面（デフォルトのアニメーション） */}
-          <Stack.Screen 
-            name="RulesScreen" 
-            component={RulesScreen} 
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ThemeProvider>
+    <AudioProvider>
+      <ThemeProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="StartScreen" screenOptions={{ headerShown: false }}>
+            <Stack.Screen
+              name="StartScreen"
+              component={StartScreen}
+              options={{
+                gestureDirection: 'horizontal-inverted',
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}
+            />
+            <Stack.Screen
+              name="QuixioScreenAI"
+              component={QuixioScreenAI}
+              options={{
+                gestureDirection: 'horizontal',
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}
+            />
+            <Stack.Screen
+              name="QuixioScreenPvP"
+              component={QuixioScreenPvP}
+              options={{
+                gestureDirection: 'horizontal',
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}
+            />
+            <Stack.Screen name="RulesScreen" component={RulesScreen} />
+            <Stack.Screen
+              name="OnlineScreen"
+              component={OnlineScreen}
+              options={{
+                gestureDirection: 'horizontal',
+                cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+              }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </ThemeProvider>
+    </AudioProvider>
   );
 }
 
-// Expo のエントリーポイントとして登録
 registerRootComponent(App);
-
 export default App;

@@ -1,129 +1,249 @@
-import React, { useEffect, useRef } from "react";
-import { View, TouchableOpacity, Animated, StyleSheet, TouchableWithoutFeedback } from "react-native";
-import { useTheme } from "../components/ThemeConfig";
-import { BOARD_SIZE } from "../constants";
+import React, { useEffect, useRef } from 'react';
+import { View, TouchableOpacity, Animated, Easing, StyleSheet, Text } from 'react-native';
+import { useTheme } from '../components/ThemeConfig';
+import { BOARD_SIZE, OUTER_INDICES } from '../constants';
 import { useSound } from '../hooks/useSound';
 import bgmFile from '../assets/sounds/Secret_Talk_2.mp3';
-// import { playSound } from '../hooks/playSound';
-// import moveSoundFile from '../assets/sounds/move.mp3';
 
-const CELL_SIZE = 60; // マスのサイズ
+const CELL_SIZE = 60;
 
-const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, currentPlayer, movingIndex }) => {
+const getSlideInfo = (fromIndex, direction) => {
+  const row = Math.floor(fromIndex / BOARD_SIZE);
+  const col = fromIndex % BOARD_SIZE;
+  const affected = [];
+  let shiftTarget = { x: 0, y: 0 };
+
+  if (direction === 'right') {
+    const lastCol = row * BOARD_SIZE + (BOARD_SIZE - 1);
+    for (let i = fromIndex + 1; i <= lastCol; i++) affected.push(i);
+    shiftTarget = { x: -CELL_SIZE, y: 0 };
+  } else if (direction === 'left') {
+    const firstCol = row * BOARD_SIZE;
+    for (let i = fromIndex - 1; i >= firstCol; i--) affected.push(i);
+    shiftTarget = { x: CELL_SIZE, y: 0 };
+  } else if (direction === 'up') {
+    for (let i = fromIndex - BOARD_SIZE; i >= col; i -= BOARD_SIZE) affected.push(i);
+    shiftTarget = { x: 0, y: CELL_SIZE };
+  } else if (direction === 'down') {
+    const lastRowIdx = (BOARD_SIZE - 1) * BOARD_SIZE + col;
+    for (let i = fromIndex + BOARD_SIZE; i <= lastRowIdx; i += BOARD_SIZE) affected.push(i);
+    shiftTarget = { x: 0, y: -CELL_SIZE };
+  }
+
+  return { affected, shiftTarget };
+};
+
+const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningLine, slideMove, turnLabel }) => {
   useSound(bgmFile);
-  const { themes, theme } = useTheme();
+  const { themes } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const translateAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current; // 駒の移動アニメーション
+  const glowAnim = useRef(new Animated.Value(0)).current;
+  const selectedFadeAnim = useRef(new Animated.Value(1)).current;
+  const shiftPieceAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const winGlowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fadeAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+    fadeAnim.setValue(0);
+    Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
   }, [currentPlayer]);
 
   useEffect(() => {
     if (selectedIndex !== null) {
-      Animated.sequence([
-        Animated.timing(scaleAnim, { toValue: 1.3, duration: 100, useNativeDriver: true }),
-        Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1.22,
+          friction: 3.5,
+          tension: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, { toValue: 1, duration: 130, useNativeDriver: true }),
       ]).start();
     } else {
-      scaleAnim.setValue(1); // 選択解除時に即座にリセット
+      Animated.parallel([
+        Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 100, useNativeDriver: true }),
+        Animated.timing(glowAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
+      ]).start();
     }
   }, [selectedIndex]);
 
   useEffect(() => {
-    if (movingIndex !== null) {
-      Animated.timing(translateAnim, { 
-        toValue: { x: 0, y: 0 }, 
-        duration: 300, 
-        useNativeDriver: true 
-      }).start(() => {
-        translateAnim.setValue({ x: 0, y: 0 }); // 位置リセット
-      });
+    if (!slideMove) {
+      selectedFadeAnim.setValue(1);
+      shiftPieceAnim.setValue({ x: 0, y: 0 });
+      return;
     }
-  }, [movingIndex]);
+    const info = getSlideInfo(slideMove.fromIndex, slideMove.direction);
+    // Hide the "from" piece instantly — fading while enemy slides in causes visual overlap
+    selectedFadeAnim.setValue(0);
+    Animated.timing(shiftPieceAnim, {
+      toValue: info.shiftTarget, duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }, [slideMove]);
 
-  if (!themes || !themes[theme]) {
-    console.error(`Error: themes[theme] is undefined. Falling back to light theme.`);
-    return null;
-  }
+  useEffect(() => {
+    if (!winningLine || winningLine.length === 0) {
+      winGlowAnim.setValue(0);
+      return;
+    }
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(winGlowAnim, { toValue: 0.5, duration: 450, useNativeDriver: true }),
+        Animated.timing(winGlowAnim, { toValue: 0.05, duration: 450, useNativeDriver: true }),
+      ])
+    ).start();
+  }, [winningLine]);
+
+  if (!themes) return null;
+
+  const playerColor = currentPlayer === 'X' ? themes.xColor : themes.oColor;
+  const playerLabel = turnLabel ?? (currentPlayer === 'X' ? 'Player X' : 'Player O');
+
+  const slideInfo = slideMove ? getSlideInfo(slideMove.fromIndex, slideMove.direction) : null;
 
   return (
-    <TouchableWithoutFeedback onPress={handleCancelSelection}>
-      <View style={[styles.container, { backgroundColor: themes.background }]}>
-        {/* 手番表示 */}
-        <Animated.Text style={[styles.turnText, { color: currentPlayer === "X" ? "#ff4d4d" : "#4d79ff", opacity: fadeAnim }]}>
-          現在の手番: {currentPlayer}
-        </Animated.Text>
+    <View style={[styles.container, { backgroundColor: themes.background }]}>
+      <Animated.View style={[styles.turnBadge, { backgroundColor: playerColor, opacity: fadeAnim }]}>
+        <Text style={styles.turnText}>{playerLabel} の番</Text>
+      </Animated.View>
 
-        {/* 盤面 */}
-        <View style={[styles.boardContainer, { width: BOARD_SIZE * CELL_SIZE, height: BOARD_SIZE * CELL_SIZE, backgroundColor: themes.boardBackground }]}>
-          {board?.map((cell, index) => {
-            const isMoving = index === movingIndex;
-            return (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleSelect(index)}
-                style={[styles.cell, selectedIndex === index && styles.selectedCell]}
-              >
+      <View style={[styles.board, { backgroundColor: themes.cellBorder }]}>
+        {board?.map((cell, index) => {
+          const isSelected = index === selectedIndex;
+          const isOuter = OUTER_INDICES.includes(index);
+          const isWinCell = winningLine?.includes(index);
+          const isFromCell = slideInfo && index === slideMove.fromIndex;
+          const isAffectedCell = slideInfo && slideInfo.affected.includes(index);
+          const cellColor = cell === 'X' ? themes.xColor : themes.oColor;
+          const winColor = cell === 'X' ? themes.xColor : themes.oColor;
+
+          const cellBg = isSelected
+            ? themes.selectedCell
+            : isOuter
+            ? themes.outerCellBackground
+            : themes.boardBackground;
+
+          return (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleSelect(index)}
+              activeOpacity={isOuter ? 0.65 : 1}
+              style={[
+                styles.cell,
+                { backgroundColor: cellBg },
+                isOuter && !isSelected && {
+                  borderWidth: 1,
+                  borderColor: themes.outerCellBorder,
+                },
+              ]}
+            >
+              {isWinCell && (
                 <Animated.View
                   style={[
-                    isMoving && styles.movingPiece,
-                    { transform: isMoving ? translateAnim.getTranslateTransform() : [] },
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: winColor, opacity: winGlowAnim },
                   ]}
-                >
-                  <Animated.Text style={[styles.cellText, { color: cell === "X" ? "#ff4d4d" : cell === "O" ? "#4d79ff" : "#000" }]}>
-                    {cell}
-                  </Animated.Text>
-                </Animated.View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                />
+              )}
+              {isSelected && (
+                <Animated.View
+                  style={[
+                    StyleSheet.absoluteFill,
+                    styles.selectionGlow,
+                    { borderColor: playerColor, opacity: glowAnim },
+                  ]}
+                  pointerEvents="none"
+                />
+              )}
+              <Animated.View
+                style={
+                  isSelected
+                    ? { transform: [{ scale: scaleAnim }] }
+                    : isFromCell
+                    ? { opacity: selectedFadeAnim }
+                    : isAffectedCell
+                    ? { transform: shiftPieceAnim.getTranslateTransform() }
+                    : {}
+                }
+              >
+                {cell ? (
+                  <View style={[styles.piece, { backgroundColor: cellColor }]}>
+                    <Text style={styles.pieceText}>{cell}</Text>
+                  </View>
+                ) : null}
+              </Animated.View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
-    </TouchableWithoutFeedback>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+  },
+  turnBadge: {
+    paddingHorizontal: 24,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 20,
   },
   turnText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 15,
+    fontSize: 15,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
-  boardContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    alignItems: "center",
+  board: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: BOARD_SIZE * CELL_SIZE + (BOARD_SIZE + 1),
+    height: BOARD_SIZE * CELL_SIZE + (BOARD_SIZE + 1),
+    gap: 1,
+    padding: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  selectionGlow: {
+    borderWidth: 2.5,
+    borderRadius: 6,
+    margin: 3,
   },
   cell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  selectedCell: {
-    backgroundColor: "rgba(255, 223, 88, 0.5)", // 選択中の色（薄い黄色）
+  piece: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.28,
+    shadowRadius: 3,
+    elevation: 4,
   },
-  cellText: {
-    fontSize: 40, // 🔥 フォントサイズを大きく！
-    fontWeight: "900", // 🔥 太字に！
-    textTransform: "uppercase", // 🔥 大文字を強調
-  },
-  movingPiece: {
-    position: "absolute",
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    justifyContent: "center",
-    alignItems: "center",
+  pieceText: {
+    fontSize: 19,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
 });
 

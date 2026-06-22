@@ -1,65 +1,104 @@
-import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
-import { BOARD_SIZE, DIRECTIONS, TOP_ROW, BOTTOM_ROW, LEFT_COL, RIGHT_COL } from "../constants";
+import React from 'react';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { TOP_ROW, BOTTOM_ROW, LEFT_COL, RIGHT_COL } from '../constants';
+import { useTheme } from '../components/ThemeConfig';
 
-const ControlButtons = ({ gameState, handleInsert, isAI }) => {
+const ARROW_MAP = { up: '↑', down: '↓', left: '←', right: '→' };
+
+const ControlButtons = ({ gameState, handleInsert }) => {
+  const { themes } = useTheme();
+  const idx = gameState.selectedIndex;
+
+  const isAllowed = {
+    up:    idx !== null && !TOP_ROW.includes(idx),
+    down:  idx !== null && !BOTTOM_ROW.includes(idx),
+    left:  idx !== null && !LEFT_COL.includes(idx),
+    right: idx !== null && !RIGHT_COL.includes(idx),
+  };
+
+  const ArrowBtn = ({ dir }) => {
+    const allowed = isAllowed[dir];
+    return (
+      <TouchableOpacity
+        onPress={() => allowed && handleInsert(idx, dir)}
+        activeOpacity={0.7}
+        style={[
+          styles.arrowBtn,
+          { backgroundColor: allowed ? themes.buttonBackground : 'transparent' },
+          !allowed && styles.arrowBtnHidden,
+        ]}
+        disabled={!allowed}
+      >
+        <Text style={[styles.arrowText, { color: allowed ? themes.buttonText : 'transparent' }]}>
+          {ARROW_MAP[dir]}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.buttonContainer}>
-        {gameState.selectedIndex !== null &&
-          Object.values(DIRECTIONS)
-            .filter(dir =>
-              !(TOP_ROW.includes(gameState.selectedIndex) && dir === "up") &&
-              !(BOTTOM_ROW.includes(gameState.selectedIndex) && dir === "down") &&
-              !(LEFT_COL.includes(gameState.selectedIndex) && dir === "left") &&
-              !(RIGHT_COL.includes(gameState.selectedIndex) && dir === "right")
-            )
-            .map((dir) => (
-              <TouchableOpacity
-                key={dir}
-                onPress={() => {
-                  console.log("ControlButtons: Pressed", dir);
-                  handleInsert(gameState.selectedIndex, dir);
-                }}
-                style={styles.button}
-              >
-                <Text style={styles.buttonText}>{dir.toUpperCase()}</Text>
-              </TouchableOpacity>
-            ))}
+    <View style={styles.dpad}>
+      <View style={styles.row}>
+        <View style={styles.corner} />
+        <ArrowBtn dir="up" />
+        <View style={styles.corner} />
+      </View>
+      <View style={styles.row}>
+        <ArrowBtn dir="left" />
+        <View style={styles.center} />
+        <ArrowBtn dir="right" />
+      </View>
+      <View style={styles.row}>
+        <View style={styles.corner} />
+        <ArrowBtn dir="down" />
+        <View style={styles.corner} />
       </View>
     </View>
   );
 };
 
+const BTN = 56;
+
 const styles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
+  dpad: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-    minHeight: 60,
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  button: {
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    margin: 10,
-    backgroundColor: "#4CAF50",
-    borderRadius: 10,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+  arrowBtn: {
+    width: BTN,
+    height: BTN,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
   },
-  buttonText: {
-    color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
+  arrowBtnHidden: {
+    elevation: 0,
+    shadowOpacity: 0,
+  },
+  arrowText: {
+    fontSize: 26,
+    fontWeight: '700',
+    lineHeight: 30,
+  },
+  corner: {
+    width: BTN,
+    height: BTN,
+    margin: 5,
+  },
+  center: {
+    width: BTN,
+    height: BTN,
+    margin: 5,
   },
 });
 
