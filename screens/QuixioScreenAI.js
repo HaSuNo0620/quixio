@@ -81,7 +81,7 @@ const QuixioScreenAI = () => {
           style={[gameStyles.backButton, { backgroundColor: themes.backButtonBackground }]}
           onPress={confirmReturnToTitle}
           activeOpacity={0.8}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
         >
           <Icon name="arrow-back" size={24} color={themes.backButtonColor} />
         </TouchableOpacity>
@@ -90,31 +90,10 @@ const QuixioScreenAI = () => {
           style={[gameStyles.muteButton, { backgroundColor: themes.backButtonBackground }]}
           onPress={toggleMute}
           activeOpacity={0.8}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
         >
           <Icon name={isMuted ? 'volume-off' : 'volume-up'} size={22} color={themes.backButtonColor} />
         </TouchableOpacity>
-
-        <View style={styles.difficultyRowGame}>
-          {DIFFICULTIES.map((d) => (
-            <TouchableOpacity
-              key={d}
-              onPress={() => setDifficulty(d)}
-              style={[
-                styles.diffBtn,
-                { backgroundColor: d === difficulty ? themes.buttonBackground : themes.backButtonBackground },
-              ]}
-              activeOpacity={0.75}
-            >
-              <Text style={[
-                styles.diffBtnText,
-                { color: d === difficulty ? themes.buttonText : themes.backButtonColor },
-              ]}>
-                {DIFFICULTY_LABEL[d]}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
         <View style={gameStyles.boardArea}>
           <GameBoard
@@ -184,11 +163,6 @@ const QuixioScreenAI = () => {
 };
 
 const styles = StyleSheet.create({
-  difficultyRowGame: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 56,
-  },
   difficultyRow: {
     flexDirection: 'row',
     gap: 8,

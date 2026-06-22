@@ -39,7 +39,6 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
-  const selectedFadeAnim = useRef(new Animated.Value(1)).current;
   const shiftPieceAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const winGlowAnim = useRef(new Animated.Value(0)).current;
 
@@ -69,13 +68,10 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
 
   useEffect(() => {
     if (!slideMove) {
-      selectedFadeAnim.setValue(1);
       shiftPieceAnim.setValue({ x: 0, y: 0 });
       return;
     }
     const info = getSlideInfo(slideMove.fromIndex, slideMove.direction);
-    // Hide the "from" piece instantly — fading while enemy slides in causes visual overlap
-    selectedFadeAnim.setValue(0);
     Animated.timing(shiftPieceAnim, {
       toValue: info.shiftTarget, duration: 240,
       easing: Easing.out(Easing.cubic),
@@ -161,14 +157,12 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
                 style={
                   isSelected
                     ? { transform: [{ scale: scaleAnim }] }
-                    : isFromCell
-                    ? { opacity: selectedFadeAnim }
                     : isAffectedCell
                     ? { transform: shiftPieceAnim.getTranslateTransform() }
                     : {}
                 }
               >
-                {cell ? (
+                {cell && !isFromCell ? (
                   <View style={[styles.piece, { backgroundColor: cellColor }]}>
                     <Text style={styles.pieceText}>{cell}</Text>
                   </View>

@@ -49,7 +49,7 @@ const QuixioScreenPvP = () => {
           style={[gameStyles.backButton, { backgroundColor: themes.backButtonBackground }]}
           onPress={confirmReturnToTitle}
           activeOpacity={0.8}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
         >
           <Icon name="arrow-back" size={24} color={themes.backButtonColor} />
         </TouchableOpacity>
@@ -58,7 +58,7 @@ const QuixioScreenPvP = () => {
           style={[gameStyles.muteButton, { backgroundColor: themes.backButtonBackground }]}
           onPress={toggleMute}
           activeOpacity={0.8}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
         >
           <Icon name={isMuted ? 'volume-off' : 'volume-up'} size={22} color={themes.backButtonColor} />
         </TouchableOpacity>

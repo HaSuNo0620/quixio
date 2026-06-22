@@ -49,6 +49,7 @@ const GameView = ({
           style={[styles.backBtn, { backgroundColor: themes.backButtonBackground }]}
           onPress={confirmLeave}
           activeOpacity={0.8}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
         >
           <Icon name="arrow-back" size={24} color={themes.backButtonColor} />
         </TouchableOpacity>
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 12,
     right: 20,
-    padding: 10,
+    padding: 18,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
