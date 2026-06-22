@@ -7,11 +7,14 @@
     "icon": "./assets/images/icon.png",
     "scheme": "quixio",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.yuuki.quixio",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.yuuki.quixio",
@@ -42,6 +45,11 @@
           "iosAppId": "ca-app-pub-9542588113001257~6549252587"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cc828a08-549c-4291-9614-06f2c6109a8a"
+      }
+    }
   }
 }
