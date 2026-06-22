@@ -6,6 +6,7 @@ import { useSound } from '../hooks/useSound';
 import bgmFile from '../assets/sounds/Secret_Talk_2.mp3';
 
 const CELL_SIZE = 60;
+const CELL_STEP = CELL_SIZE + 1; // gap: 1 accounts for 1px gap between cells
 
 const getSlideInfo = (fromIndex, direction) => {
   const row = Math.floor(fromIndex / BOARD_SIZE);
@@ -16,18 +17,18 @@ const getSlideInfo = (fromIndex, direction) => {
   if (direction === 'right') {
     const lastCol = row * BOARD_SIZE + (BOARD_SIZE - 1);
     for (let i = fromIndex + 1; i <= lastCol; i++) affected.push(i);
-    shiftTarget = { x: -CELL_SIZE, y: 0 };
+    shiftTarget = { x: -CELL_STEP, y: 0 };
   } else if (direction === 'left') {
     const firstCol = row * BOARD_SIZE;
     for (let i = fromIndex - 1; i >= firstCol; i--) affected.push(i);
-    shiftTarget = { x: CELL_SIZE, y: 0 };
+    shiftTarget = { x: CELL_STEP, y: 0 };
   } else if (direction === 'up') {
     for (let i = fromIndex - BOARD_SIZE; i >= col; i -= BOARD_SIZE) affected.push(i);
-    shiftTarget = { x: 0, y: CELL_SIZE };
+    shiftTarget = { x: 0, y: CELL_STEP };
   } else if (direction === 'down') {
     const lastRowIdx = (BOARD_SIZE - 1) * BOARD_SIZE + col;
     for (let i = fromIndex + BOARD_SIZE; i <= lastRowIdx; i += BOARD_SIZE) affected.push(i);
-    shiftTarget = { x: 0, y: -CELL_SIZE };
+    shiftTarget = { x: 0, y: -CELL_STEP };
   }
 
   return { affected, shiftTarget };
@@ -67,15 +68,15 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
   }, [selectedIndex]);
 
   useEffect(() => {
-    if (!slideMove) {
-      shiftPieceAnim.setValue({ x: 0, y: 0 });
-      return;
-    }
+    shiftPieceAnim.stopAnimation();
+    shiftPieceAnim.setValue({ x: 0, y: 0 });
+    if (!slideMove) return;
     const info = getSlideInfo(slideMove.fromIndex, slideMove.direction);
     Animated.timing(shiftPieceAnim, {
-      toValue: info.shiftTarget, duration: 240,
+      toValue: info.shiftTarget,
+      duration: 240,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
+      useNativeDriver: false,
     }).start();
   }, [slideMove]);
 
