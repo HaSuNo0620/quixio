@@ -4,7 +4,7 @@ import Purchases from 'react-native-purchases';
 
 // Replace with your RevenueCat iOS API key after setting up the dashboard
 const REVENUECAT_IOS_KEY = 'test_ryEMnDwkaVNRuVrMhPVhlVCoXrr';
-const ENTITLEMENT_PRO = 'pro';
+const ENTITLEMENT_PRO = 'Pro';
 
 const PurchaseContext = createContext({
   isPro: false,
