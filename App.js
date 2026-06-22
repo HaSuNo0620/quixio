@@ -11,6 +11,7 @@ import RulesScreen from './screens/RulesScreen';
 import OnlineScreen from './screens/OnlineScreen';
 import { ThemeProvider } from './components/ThemeConfig';
 import { AudioProvider } from './components/AudioContext';
+import { PurchaseProvider } from './components/PurchaseContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -32,6 +33,7 @@ function App() {
   return (
     <AudioProvider>
       <ThemeProvider>
+        <PurchaseProvider>
         <NavigationContainer>
           <Stack.Navigator initialRouteName="StartScreen" screenOptions={{ headerShown: false }}>
             <Stack.Screen
@@ -69,6 +71,7 @@ function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
+        </PurchaseProvider>
       </ThemeProvider>
     </AudioProvider>
   );

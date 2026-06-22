@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import {
   View, TouchableOpacity, TouchableWithoutFeedback,
-  Keyboard, Modal, Text, Alert,
+  Keyboard, Modal, Text, Alert, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -14,12 +14,15 @@ import gameStyles from '../components/gameStyles';
 import GameBoard from '../game/GameBoard';
 import ControlButtons from '../game/ControlButtons';
 import ConfettiOverlay from '../components/ConfettiOverlay';
+import BannerAdWrapper from '../components/BannerAdWrapper';
+import { usePurchase } from '../components/PurchaseContext';
 
 const QuixioScreenPvP = () => {
   const navigation = useNavigation();
   const { themes } = useTheme();
   const { isMuted, toggleMute } = useAudio();
   const { recordPvP } = useStats();
+  const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
   const {
     gameState, showResult,
     handleRestart, handleSelect, handleCancelSelection, handleInsert,
@@ -80,6 +83,8 @@ const QuixioScreenPvP = () => {
           </View>
         )}
 
+        <BannerAdWrapper />
+
         <Modal visible={showResult} transparent animationType="fade">
           <View style={[gameStyles.modalOverlay, { backgroundColor: themes.modalOverlay }]}>
             <ConfettiOverlay visible={showResult} />
@@ -101,6 +106,21 @@ const QuixioScreenPvP = () => {
               >
                 <Text style={[gameStyles.modalBtnText, { color: themes.modalSecondaryText }]}>タイトルに戻る</Text>
               </TouchableOpacity>
+              {!isPro && (
+                <>
+                  <TouchableOpacity
+                    style={styles.proBtn}
+                    onPress={purchasePro}
+                    activeOpacity={0.8}
+                    disabled={purchaseLoading}
+                  >
+                    <Text style={styles.proBtnText}>★ 広告を削除（Pro版）</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={restorePurchases} disabled={purchaseLoading}>
+                    <Text style={styles.restoreText}>購入を復元</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         </Modal>
@@ -108,5 +128,28 @@ const QuixioScreenPvP = () => {
     </TouchableWithoutFeedback>
   );
 };
+
+const styles = StyleSheet.create({
+  proBtn: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: '#F5A623',
+  },
+  proBtnText: {
+    fontSize: 14,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    color: '#FFFFFF',
+  },
+  restoreText: {
+    fontSize: 12,
+    fontFamily: 'SpaceGrotesk_500Medium',
+    color: '#888',
+    marginTop: 8,
+    textDecorationLine: 'underline',
+  },
+});
 
 export default QuixioScreenPvP;

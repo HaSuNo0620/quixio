@@ -15,6 +15,8 @@ import gameStyles from '../components/gameStyles';
 import GameBoard from '../game/GameBoard';
 import ControlButtons from '../game/ControlButtons';
 import ConfettiOverlay from '../components/ConfettiOverlay';
+import BannerAdWrapper from '../components/BannerAdWrapper';
+import { usePurchase } from '../components/PurchaseContext';
 
 const AI_PLAYER = 'O';
 const HUMAN_PLAYER = 'X';
@@ -32,6 +34,7 @@ const QuixioScreenAI = () => {
 
   const [difficulty, setDifficulty] = useState('medium');
   const { recordAI } = useStats();
+  const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
   const innerTimerRef = useRef(null);
 
   useEffect(() => {
@@ -113,6 +116,8 @@ const QuixioScreenAI = () => {
           </View>
         )}
 
+        <BannerAdWrapper />
+
         <Modal visible={showResult} transparent animationType="fade">
           <View style={[gameStyles.modalOverlay, { backgroundColor: themes.modalOverlay }]}>
             <ConfettiOverlay visible={showResult} />
@@ -154,6 +159,21 @@ const QuixioScreenAI = () => {
               >
                 <Text style={[gameStyles.modalBtnText, { color: themes.modalSecondaryText }]}>タイトルに戻る</Text>
               </TouchableOpacity>
+              {!isPro && (
+                <>
+                  <TouchableOpacity
+                    style={styles.proBtn}
+                    onPress={purchasePro}
+                    activeOpacity={0.8}
+                    disabled={purchaseLoading}
+                  >
+                    <Text style={styles.proBtnText}>★ 広告を削除（Pro版）</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={restorePurchases} disabled={purchaseLoading}>
+                    <Text style={styles.restoreText}>購入を復元</Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </View>
         </Modal>
@@ -177,6 +197,26 @@ const styles = StyleSheet.create({
   diffBtnText: {
     fontSize: 13,
     fontFamily: 'SpaceGrotesk_600SemiBold',
+  },
+  proBtn: {
+    width: '100%',
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: '#F5A623',
+  },
+  proBtnText: {
+    fontSize: 14,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    color: '#FFFFFF',
+  },
+  restoreText: {
+    fontSize: 12,
+    fontFamily: 'SpaceGrotesk_500Medium',
+    color: '#888',
+    marginTop: 8,
+    textDecorationLine: 'underline',
   },
 });
 
