@@ -10,8 +10,8 @@ import { useStats } from '../hooks/useStats';
 import { useOnboarding } from '../hooks/useOnboarding';
 
 const MENU_ITEMS = [
-  { label: 'プレイヤー vs プレイヤー', icon: 'group',        screen: 'QuixioScreenPvP', primary: true },
-  { label: 'AI と対戦',               icon: 'computer',     screen: 'QuixioScreenAI',  primary: true },
+  { label: 'プレイヤー vs プレイヤー', icon: 'group',        screen: 'FiveonScreenPvP', primary: true },
+  { label: 'AI と対戦',               icon: 'computer',     screen: 'FiveonScreenAI',  primary: true },
   { label: 'オンライン対戦',           icon: 'wifi',         screen: 'OnlineScreen',    primary: true },
   { label: 'ルール説明',               icon: 'help-outline', screen: 'RulesScreen',     primary: false },
 ];
@@ -68,7 +68,7 @@ const StartScreen = () => {
       >
         <View style={styles.titleRow}>
           <Text style={[styles.xMark, { color: themes.xColor }]}>X</Text>
-          <Text style={[styles.title, { color: themes.textColor }]}>Quixio</Text>
+          <Text style={[styles.title, { color: themes.textColor }]}>Fiveon</Text>
           <Text style={[styles.oMark, { color: themes.oColor }]}>O</Text>
         </View>
         <Text style={[styles.subtitle, { color: themes.subTextColor }]}>5×5 スライドパズル対戦</Text>
@@ -134,7 +134,7 @@ const StartScreen = () => {
           <View style={[styles.obCard, { backgroundColor: themes.modalBackground }]}>
             <View style={styles.obTitleRow}>
               <Text style={[styles.xMark, { color: themes.xColor, fontSize: 28 }]}>X</Text>
-              <Text style={[styles.obTitle, { color: themes.textColor }]}>Quixio へようこそ</Text>
+              <Text style={[styles.obTitle, { color: themes.textColor }]}>Fiveon へようこそ</Text>
               <Text style={[styles.oMark, { color: themes.oColor, fontSize: 28 }]}>O</Text>
             </View>
 

@@ -57,7 +57,7 @@ const RulesScreen = () => {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: themes.background }]}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { color: themes.textColor }]}>Quixio ルール</Text>
+        <Text style={[styles.title, { color: themes.textColor }]}>Fiveon ルール</Text>
 
         <View style={[styles.section, { borderColor: themes.cellBorder }]}>
           <Text style={[styles.sectionTitle, { color: themes.textColor }]}>ボードについて</Text>

@@ -5,8 +5,8 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 import { useFonts, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
 import * as SplashScreen from 'expo-splash-screen';
 import StartScreen from './screens/StartScreen';
-import QuixioScreenPvP from './screens/QuixioScreenPvP';
-import QuixioScreenAI from './screens/QuixioScreenAI';
+import FiveonScreenPvP from './screens/FiveonScreenPvP';
+import FiveonScreenAI from './screens/FiveonScreenAI';
 import RulesScreen from './screens/RulesScreen';
 import OnlineScreen from './screens/OnlineScreen';
 import { ThemeProvider } from './components/ThemeConfig';
@@ -45,16 +45,16 @@ function App() {
               }}
             />
             <Stack.Screen
-              name="QuixioScreenAI"
-              component={QuixioScreenAI}
+              name="FiveonScreenAI"
+              component={FiveonScreenAI}
               options={{
                 gestureDirection: 'horizontal',
                 cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
               }}
             />
             <Stack.Screen
-              name="QuixioScreenPvP"
-              component={QuixioScreenPvP}
+              name="FiveonScreenPvP"
+              component={FiveonScreenPvP}
               options={{
                 gestureDirection: 'horizontal',
                 cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,

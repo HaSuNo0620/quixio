@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const KEY = '@quixio_stats_v1';
+const KEY = '@fiveon_stats_v1';
 
 const DEFAULT = {
   ai:     { wins: 0, losses: 0 },

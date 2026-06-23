@@ -1,6 +1,6 @@
-# Quixio — React Native Mobile Board Game
+# Fiveon — React Native Mobile Board Game
 
-Quixo 派生のボードゲーム「Quixio」の React Native (Expo) 実装。
+5×5 スライドパズル対戦ゲーム「Fiveon」の React Native (Expo) 実装。
 
 ---
 
@@ -63,8 +63,8 @@ my-quixio/
 │
 ├── screens/
 │   ├── StartScreen.js          # タイトル画面・モード選択
-│   ├── QuixioScreenPvP.js      # プレイヤー vs プレイヤー画面
-│   ├── QuixioScreenAI.js       # プレイヤー vs AI 画面 (難易度選択付き)
+│   ├── FiveonScreenPvP.js      # プレイヤー vs プレイヤー画面
+│   ├── FiveonScreenAI.js       # プレイヤー vs AI 画面 (難易度選択付き)
 │   ├── RulesScreen.js          # ルール説明画面 (スクロール対応)
 │   └── OnlineScreen.js         # オンライン対戦画面 (Firebase)
 │
@@ -147,8 +147,8 @@ AI の手順: 800ms 待機 → 駒選択 → 500ms 後にスライド実行。
 
 ```
 StartScreen
-  ├── QuixioScreenPvP   (2 人対戦)
-  ├── QuixioScreenAI    (AI 対戦・難易度選択)
+  ├── FiveonScreenPvP   (2 人対戦)
+  ├── FiveonScreenAI    (AI 対戦・難易度選択)
   ├── OnlineScreen      (Firebase オンライン対戦)
   └── RulesScreen       (ルール説明)
 ```

@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
-  Keyboard, Modal, Text, Alert,
+  View, TouchableOpacity, TouchableWithoutFeedback,
+  Keyboard, Modal, Text, Alert, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -10,7 +10,6 @@ import { useTheme } from '../components/ThemeConfig';
 import { useAudio } from '../components/AudioContext';
 import { useGameLogic } from '../hooks/useGameLogic';
 import { useStats } from '../hooks/useStats';
-import { getBestMove, DIFFICULTY_DEPTH } from '../game/aiEngine';
 import gameStyles from '../components/gameStyles';
 import GameBoard from '../game/GameBoard';
 import ControlButtons from '../game/ControlButtons';
@@ -18,50 +17,20 @@ import ConfettiOverlay from '../components/ConfettiOverlay';
 import BannerAdWrapper from '../components/BannerAdWrapper';
 import { usePurchase } from '../components/PurchaseContext';
 
-const AI_PLAYER = 'O';
-const HUMAN_PLAYER = 'X';
-const DIFFICULTIES = ['easy', 'medium', 'hard'];
-const DIFFICULTY_LABEL = { easy: '簡単', medium: '普通', hard: '難しい' };
-
-const QuixioScreenAI = () => {
+const FiveonScreenPvP = () => {
   const navigation = useNavigation();
   const { themes } = useTheme();
   const { isMuted, toggleMute } = useAudio();
+  const { recordPvP } = useStats();
+  const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
   const {
     gameState, showResult,
-    handleRestart, handleSelect, handleCancelSelection, handleInsert, setSelectedIndex,
+    handleRestart, handleSelect, handleCancelSelection, handleInsert,
   } = useGameLogic();
 
-  const [difficulty, setDifficulty] = useState('medium');
-  const { recordAI } = useStats();
-  const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
-  const innerTimerRef = useRef(null);
-
   useEffect(() => {
-    if (gameState.winner) recordAI(gameState.winner === HUMAN_PLAYER);
+    if (gameState.winner) recordPvP(gameState.winner);
   }, [gameState.winner]);
-
-  useEffect(() => {
-    if (gameState.currentPlayer !== AI_PLAYER || gameState.winner) return;
-
-    const timer = setTimeout(() => {
-      const depth = DIFFICULTY_DEPTH[difficulty];
-      const move = getBestMove(gameState.board, AI_PLAYER, HUMAN_PLAYER, depth);
-      if (!move) return;
-
-      setSelectedIndex(move.idx);
-      innerTimerRef.current = setTimeout(() => {
-        innerTimerRef.current = null;
-        handleInsert(move.idx, move.dir);
-      }, 500);
-    }, 800);
-
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(innerTimerRef.current);
-      innerTimerRef.current = null;
-    };
-  }, [gameState.currentPlayer, gameState.winner]);
 
   const confirmReturnToTitle = () => {
     Alert.alert(
@@ -74,11 +43,10 @@ const QuixioScreenAI = () => {
     );
   };
 
-  const winnerColor = gameState.winner === HUMAN_PLAYER ? themes.xColor : themes.oColor;
-  const isPlayerTurn = gameState.currentPlayer !== AI_PLAYER;
+  const winnerColor = gameState.winner === 'X' ? themes.xColor : themes.oColor;
 
   return (
-    <TouchableWithoutFeedback onPress={() => { if (isPlayerTurn) handleCancelSelection(); Keyboard.dismiss(); }}>
+    <TouchableWithoutFeedback onPress={() => { handleCancelSelection(); Keyboard.dismiss(); }}>
       <SafeAreaView style={[gameStyles.container, { backgroundColor: themes.background }]}>
         <TouchableOpacity
           style={[gameStyles.backButton, { backgroundColor: themes.backButtonBackground }]}
@@ -102,15 +70,14 @@ const QuixioScreenAI = () => {
           <GameBoard
             board={gameState.board}
             selectedIndex={gameState.selectedIndex}
-            handleSelect={isPlayerTurn ? handleSelect : () => {}}
+            handleSelect={handleSelect}
             currentPlayer={gameState.currentPlayer}
             winningLine={gameState.winningLine}
             slideMove={gameState.slideMove}
-            turnLabel={isPlayerTurn ? 'あなたの番' : 'AI が考え中…'}
           />
         </View>
 
-        {gameState.selectedIndex !== null && isPlayerTurn && (
+        {gameState.selectedIndex !== null && (
           <View style={gameStyles.controlsArea}>
             <ControlButtons gameState={gameState} handleInsert={handleInsert} />
           </View>
@@ -122,29 +89,9 @@ const QuixioScreenAI = () => {
           <View style={[gameStyles.modalOverlay, { backgroundColor: themes.modalOverlay }]}>
             <ConfettiOverlay visible={showResult} />
             <View style={[gameStyles.modalCard, { backgroundColor: themes.modalBackground }]}>
-              <Text style={[gameStyles.winnerLabel, { color: winnerColor, marginBottom: 16 }]}>
-                {gameState.winner === HUMAN_PLAYER ? 'あなたの勝利！' : 'AI の勝利！'}
+              <Text style={[gameStyles.winnerLabel, { color: winnerColor }]}>
+                Player {gameState.winner} の勝利！
               </Text>
-              <View style={styles.difficultyRow}>
-                {DIFFICULTIES.map((d) => (
-                  <TouchableOpacity
-                    key={d}
-                    onPress={() => setDifficulty(d)}
-                    style={[
-                      styles.diffBtn,
-                      { backgroundColor: d === difficulty ? themes.buttonBackground : themes.modalSecondaryBackground },
-                    ]}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={[
-                      styles.diffBtnText,
-                      { color: d === difficulty ? themes.buttonText : themes.modalSecondaryText },
-                    ]}>
-                      {DIFFICULTY_LABEL[d]}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
               <TouchableOpacity
                 style={[gameStyles.modalBtn, { backgroundColor: themes.modalButtonBackground }]}
                 onPress={handleRestart}
@@ -183,21 +130,6 @@ const QuixioScreenAI = () => {
 };
 
 const styles = StyleSheet.create({
-  difficultyRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 16,
-    marginBottom: 4,
-  },
-  diffBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  diffBtnText: {
-    fontSize: 13,
-    fontFamily: 'SpaceGrotesk_600SemiBold',
-  },
   proBtn: {
     width: '100%',
     paddingVertical: 12,
@@ -220,4 +152,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuixioScreenAI;
+export default FiveonScreenPvP;

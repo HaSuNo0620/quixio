@@ -64,7 +64,7 @@ describe('useOnboarding', () => {
     await act(async () => {
       await hook.current.completeOnboarding();
     });
-    expect(AsyncStorage.setItem).toHaveBeenCalledWith('@quixio_onboarded_v1', '1');
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('@fiveon_onboarded_v1', '1');
   });
 
   test('completeOnboarding does not write to storage twice on re-call', async () => {

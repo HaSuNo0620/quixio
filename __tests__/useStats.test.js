@@ -102,7 +102,7 @@ describe('useStats', () => {
     const hook = await renderHook(useStats);
     await act(async () => { hook.current.recordAI(true); });
     expect(AsyncStorage.setItem).toHaveBeenCalledWith(
-      '@quixio_stats_v1',
+      '@fiveon_stats_v1',
       expect.stringContaining('"wins":1'),
     );
   });
