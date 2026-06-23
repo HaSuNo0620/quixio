@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import * as Haptics from 'expo-haptics';
 import { BOARD_SIZE, OUTER_INDICES } from '../constants';
 import { checkWinner } from '../game/gameLogic';
@@ -31,12 +31,12 @@ export function useGameLogic() {
     if (gameState.winner) setShowResult(true);
   }, [gameState.winner]);
 
-  const handleRestart = () => {
+  const handleRestart = useCallback(() => {
     setShowResult(false);
     setGameState(initState());
-  };
+  }, []);
 
-  const handleSelect = (index) => {
+  const handleSelect = useCallback((index) => {
     const { board, currentPlayer, winner } = stateRef.current;
     if (!OUTER_INDICES.includes(index) || winner) return;
     if (board[index] === currentPlayer || board[index] === null) {
@@ -44,17 +44,17 @@ export function useGameLogic() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setGameState((prev) => ({ ...prev, selectedIndex: index }));
     }
-  };
+  }, []);
 
-  const setSelectedIndex = (index) => {
+  const setSelectedIndex = useCallback((index) => {
     setGameState((prev) => ({ ...prev, selectedIndex: index }));
-  };
+  }, []);
 
-  const handleCancelSelection = () => {
+  const handleCancelSelection = useCallback(() => {
     setGameState((prev) => ({ ...prev, selectedIndex: null }));
-  };
+  }, []);
 
-  const handleInsert = (selectedIdx, direction) => {
+  const handleInsert = useCallback((selectedIdx, direction) => {
     const { board, currentPlayer, winner } = stateRef.current;
     if (winner || selectedIdx === null) return;
 
@@ -106,7 +106,7 @@ export function useGameLogic() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     }, 300);
-  };
+  }, []);
 
   return {
     gameState,

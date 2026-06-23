@@ -100,4 +100,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ControlButtons;
+export default React.memo(ControlButtons);

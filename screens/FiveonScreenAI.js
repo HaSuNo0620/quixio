@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
-  Keyboard, Modal, Text, Alert,
+  Keyboard, Modal, Text,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -16,6 +16,8 @@ import GameBoard from '../game/GameBoard';
 import ControlButtons from '../game/ControlButtons';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import BannerAdWrapper from '../components/BannerAdWrapper';
+import TutorialOverlay from '../components/TutorialOverlay';
+import ConfirmModal from '../components/ConfirmModal';
 import { usePurchase } from '../components/PurchaseContext';
 
 const AI_PLAYER = 'O';
@@ -34,6 +36,7 @@ const FiveonScreenAI = () => {
 
   const [difficulty, setDifficulty] = useState('medium');
   const [gameStarted, setGameStarted] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const { recordAI } = useStats();
   const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
   const innerTimerRef = useRef(null);
@@ -64,19 +67,19 @@ const FiveonScreenAI = () => {
     };
   }, [gameState.currentPlayer, gameState.winner]);
 
-  const confirmReturnToTitle = () => {
-    Alert.alert(
-      'タイトルに戻りますか？',
-      '現在のゲームがリセットされます。',
-      [
-        { text: 'いいえ', style: 'cancel' },
-        { text: 'はい', onPress: () => navigation.replace('StartScreen') },
-      ]
-    );
-  };
+  const confirmReturnToTitle = useCallback(() => setShowExitConfirm(true), []);
 
   const winnerColor = gameState.winner === HUMAN_PLAYER ? themes.xColor : themes.oColor;
   const isPlayerTurn = gameState.currentPlayer !== AI_PLAYER;
+
+  const guardedHandleSelect = useCallback(
+    (idx) => { if (isPlayerTurn) handleSelect(idx); },
+    [isPlayerTurn, handleSelect],
+  );
+  const guardedHandleCancelSelection = useCallback(
+    () => { if (isPlayerTurn) handleCancelSelection(); },
+    [isPlayerTurn, handleCancelSelection],
+  );
 
   if (!gameStarted) {
     return (
@@ -142,15 +145,23 @@ const FiveonScreenAI = () => {
           <Icon name={isMuted ? 'volume-off' : 'volume-up'} size={22} color={themes.backButtonColor} />
         </TouchableOpacity>
 
+        <View style={[styles.difficultyChip, { backgroundColor: themes.backButtonBackground }]}>
+          <Text style={[styles.difficultyChipText, { color: themes.subTextColor }]}>
+            {DIFFICULTY_LABEL[difficulty]}
+          </Text>
+        </View>
+
         <View style={gameStyles.boardArea}>
           <GameBoard
             board={gameState.board}
             selectedIndex={gameState.selectedIndex}
-            handleSelect={isPlayerTurn ? handleSelect : () => {}}
+            handleSelect={guardedHandleSelect}
+            handleCancelSelection={guardedHandleCancelSelection}
             currentPlayer={gameState.currentPlayer}
             winningLine={gameState.winningLine}
             slideMove={gameState.slideMove}
-            turnLabel={isPlayerTurn ? 'あなたの番' : 'AI が考え中…'}
+            turnLabel={isPlayerTurn ? 'あなたの番' : null}
+            isThinking={!isPlayerTurn && !gameState.winner}
           />
         </View>
 
@@ -162,11 +173,21 @@ const FiveonScreenAI = () => {
 
         <BannerAdWrapper />
 
+        <TutorialOverlay />
+
+        <ConfirmModal
+          visible={showExitConfirm}
+          title="タイトルに戻りますか？"
+          message="現在のゲームがリセットされます。"
+          onConfirm={() => { setShowExitConfirm(false); navigation.replace('StartScreen'); }}
+          onCancel={() => setShowExitConfirm(false)}
+        />
+
         <Modal visible={showResult} transparent animationType="fade">
           <View style={[gameStyles.modalOverlay, { backgroundColor: themes.modalOverlay }]}>
             <ConfettiOverlay visible={showResult} />
             <View style={[gameStyles.modalCard, { backgroundColor: themes.modalBackground }]}>
-              <Text style={[gameStyles.winnerLabel, { color: winnerColor, marginBottom: 16 }]}>
+              <Text style={[gameStyles.winnerLabel, { color: winnerColor }]}>
                 {gameState.winner === HUMAN_PLAYER ? 'あなたの勝利！' : 'AI の勝利！'}
               </Text>
               <View style={styles.difficultyRow}>
@@ -227,6 +248,19 @@ const FiveonScreenAI = () => {
 };
 
 const styles = StyleSheet.create({
+  difficultyChip: {
+    position: 'absolute',
+    top: 82,
+    right: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 100,
+    zIndex: 9,
+  },
+  difficultyChipText: {
+    fontSize: 12,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
+  },
   diffSelectArea: {
     flex: 1,
     justifyContent: 'center',
@@ -263,7 +297,7 @@ const styles = StyleSheet.create({
   diffBtn: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: 10,
+    borderRadius: 12,
   },
   diffBtnText: {
     fontSize: 13,
@@ -272,7 +306,7 @@ const styles = StyleSheet.create({
   proBtn: {
     width: '100%',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 10,
     backgroundColor: '#F5A623',

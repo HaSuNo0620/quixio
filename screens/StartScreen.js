@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   },
   iconBtn: {
     padding: 10,
-    borderRadius: 12,
+    borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     width: 280,
     paddingVertical: 15,
     paddingHorizontal: 24,
-    borderRadius: 16,
+    borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.16,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   obCard: {
     width: '100%',
     maxWidth: 340,
-    borderRadius: 24,
+    borderRadius: 20,
     padding: 28,
     alignItems: 'center',
     shadowColor: '#000',
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   obIconBg: {
     width: 36,
     height: 36,
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     flexShrink: 0,

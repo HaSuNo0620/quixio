@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, TouchableOpacity, TouchableWithoutFeedback,
-  Keyboard, Modal, Text, Alert, StyleSheet,
+  Keyboard, Modal, Text, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +15,8 @@ import GameBoard from '../game/GameBoard';
 import ControlButtons from '../game/ControlButtons';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import BannerAdWrapper from '../components/BannerAdWrapper';
+import TutorialOverlay from '../components/TutorialOverlay';
+import ConfirmModal from '../components/ConfirmModal';
 import { usePurchase } from '../components/PurchaseContext';
 
 const FiveonScreenPvP = () => {
@@ -23,6 +25,7 @@ const FiveonScreenPvP = () => {
   const { isMuted, toggleMute } = useAudio();
   const { recordPvP } = useStats();
   const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const {
     gameState, showResult,
     handleRestart, handleSelect, handleCancelSelection, handleInsert,
@@ -32,16 +35,7 @@ const FiveonScreenPvP = () => {
     if (gameState.winner) recordPvP(gameState.winner);
   }, [gameState.winner]);
 
-  const confirmReturnToTitle = () => {
-    Alert.alert(
-      'タイトルに戻りますか？',
-      '現在のゲームがリセットされます。',
-      [
-        { text: 'いいえ', style: 'cancel' },
-        { text: 'はい', onPress: () => navigation.replace('StartScreen') },
-      ]
-    );
-  };
+  const confirmReturnToTitle = useCallback(() => setShowExitConfirm(true), []);
 
   const winnerColor = gameState.winner === 'X' ? themes.xColor : themes.oColor;
 
@@ -71,6 +65,7 @@ const FiveonScreenPvP = () => {
             board={gameState.board}
             selectedIndex={gameState.selectedIndex}
             handleSelect={handleSelect}
+            handleCancelSelection={handleCancelSelection}
             currentPlayer={gameState.currentPlayer}
             winningLine={gameState.winningLine}
             slideMove={gameState.slideMove}
@@ -84,6 +79,16 @@ const FiveonScreenPvP = () => {
         </View>
 
         <BannerAdWrapper />
+
+        <TutorialOverlay />
+
+        <ConfirmModal
+          visible={showExitConfirm}
+          title="タイトルに戻りますか？"
+          message="現在のゲームがリセットされます。"
+          onConfirm={() => { setShowExitConfirm(false); navigation.replace('StartScreen'); }}
+          onCancel={() => setShowExitConfirm(false)}
+        />
 
         <Modal visible={showResult} transparent animationType="fade">
           <View style={[gameStyles.modalOverlay, { backgroundColor: themes.modalOverlay }]}>
@@ -133,7 +138,7 @@ const styles = StyleSheet.create({
   proBtn: {
     width: '100%',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     marginTop: 10,
     backgroundColor: '#F5A623',

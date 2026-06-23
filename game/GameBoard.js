@@ -1,5 +1,33 @@
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Animated, Easing, StyleSheet, Text } from 'react-native';
+
+const ThinkingDots = ({ color }) => {
+  const a0 = useRef(new Animated.Value(0.3)).current;
+  const a1 = useRef(new Animated.Value(0.3)).current;
+  const a2 = useRef(new Animated.Value(0.3)).current;
+  useEffect(() => {
+    const makeLoop = (val, delay) => Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(val, { toValue: 1, duration: 250, useNativeDriver: true }),
+        Animated.timing(val, { toValue: 0.3, duration: 250, useNativeDriver: true }),
+        Animated.delay(500 - delay),
+      ])
+    );
+    const l0 = makeLoop(a0, 0);
+    const l1 = makeLoop(a1, 167);
+    const l2 = makeLoop(a2, 334);
+    l0.start(); l1.start(); l2.start();
+    return () => { l0.stop(); l1.stop(); l2.stop(); };
+  }, []);
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, height: 22 }}>
+      {[a0, a1, a2].map((anim, i) => (
+        <Animated.View key={i} style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: color, opacity: anim }} />
+      ))}
+    </View>
+  );
+};
 import { useTheme } from '../components/ThemeConfig';
 import { BOARD_SIZE, OUTER_INDICES, TOP_ROW, BOTTOM_ROW, LEFT_COL, RIGHT_COL } from '../constants';
 import { useSound } from '../hooks/useSound';
@@ -34,7 +62,7 @@ const getSlideInfo = (fromIndex, direction) => {
   return { affected, shiftTarget };
 };
 
-const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningLine, slideMove, turnLabel }) => {
+const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, currentPlayer, winningLine, slideMove, turnLabel, isThinking }) => {
   useSound(bgmFile);
   const { themes } = useTheme();
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -43,6 +71,26 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
   const shiftPieceAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const winGlowAnim = useRef(new Animated.Value(0)).current;
   const boardBounce = useRef(new Animated.Value(1)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
+
+  const triggerShake = () => {
+    shakeAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: -6, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 6, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -4, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 4, duration: 50, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
+    ]).start();
+  };
+
+  const onCellPress = (index) => {
+    if (!OUTER_INDICES.includes(index)) {
+      triggerShake();
+      return;
+    }
+    handleSelect(index);
+  };
 
   // ターン切替: opacity を 0 にせず dim → bright でボードが動かない
   useEffect(() => {
@@ -122,8 +170,15 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
 
   return (
     <View style={[styles.container, { backgroundColor: themes.background }]}>
-      <Animated.View style={[styles.turnBadge, { backgroundColor: playerColor, opacity: fadeAnim }]}>
-        <Text style={styles.turnText}>{playerLabel}</Text>
+      <Animated.View style={[
+        styles.turnBadge,
+        { backgroundColor: playerColor, opacity: fadeAnim, transform: [{ translateX: shakeAnim }] },
+      ]}>
+        {isThinking ? (
+          <ThinkingDots color="#FFFFFF" />
+        ) : (
+          <Text style={styles.turnText}>{playerLabel}</Text>
+        )}
       </Animated.View>
 
       <Animated.View style={{ transform: [{ scale: boardBounce }] }}>
@@ -147,7 +202,8 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
             return (
               <TouchableOpacity
                 key={index}
-                onPress={() => handleSelect(index)}
+                onPress={() => onCellPress(index)}
+                onLongPress={isSelected && handleCancelSelection ? handleCancelSelection : undefined}
                 activeOpacity={isOuter ? 0.65 : 1}
                 style={[
                   styles.cell,
@@ -195,7 +251,8 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
                   }
                 >
                   {cell && !isFromCell ? (
-                    <View style={[styles.piece, { backgroundColor: cellColor }]}>
+                    <View style={[styles.piece, { backgroundColor: cellColor, shadowColor: themes.boardShadowColor }]}>
+                      <View style={styles.pieceHighlight} />
                       <Text style={styles.pieceText}>{cell}</Text>
                     </View>
                   ) : null}
@@ -219,7 +276,7 @@ const styles = StyleSheet.create({
   turnBadge: {
     paddingHorizontal: 24,
     paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 100,
     marginBottom: 20,
   },
   turnText: {
@@ -275,21 +332,29 @@ const styles = StyleSheet.create({
   piece: {
     width: CELL_SIZE - 4,
     height: CELL_SIZE - 4,
-    borderRadius: 10,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.28,
     shadowRadius: 3,
     elevation: 4,
   },
+  pieceHighlight: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: '48%',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    pointerEvents: 'none',
+  },
   pieceText: {
-    fontSize: 26,
+    fontSize: 22,
     fontFamily: 'SpaceGrotesk_700Bold',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
 });
 
-export default GameBoard;
+export default React.memo(GameBoard);

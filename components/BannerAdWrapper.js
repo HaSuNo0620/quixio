@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { usePurchase } from './PurchaseContext';
+import { useTheme } from './ThemeConfig';
 
 const AD_UNIT_ID = __DEV__
   ? TestIds.BANNER
@@ -9,9 +10,11 @@ const AD_UNIT_ID = __DEV__
 
 const BannerAdWrapper = () => {
   const { isPro } = usePurchase();
+  const { themes } = useTheme();
   if (isPro) return null;
   return (
     <View style={styles.container}>
+      <View style={[styles.fade, { backgroundColor: themes.background }]} pointerEvents="none" />
       <BannerAd
         unitId={AD_UNIT_ID}
         size={BannerAdSize.BANNER}
@@ -26,6 +29,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 52,
     paddingBottom: 4,
+  },
+  fade: {
+    position: 'absolute',
+    top: -10,
+    left: 0,
+    right: 0,
+    height: 10,
+    opacity: 0.72,
   },
 });
 
