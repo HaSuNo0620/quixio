@@ -102,6 +102,8 @@ const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, 
 
   useEffect(() => {
     if (selectedIndex !== null) {
+      scaleAnim.stopAnimation();
+      glowAnim.stopAnimation();
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1.22,
@@ -112,10 +114,12 @@ const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, 
         Animated.timing(glowAnim, { toValue: 1, duration: 130, useNativeDriver: true }),
       ]).start();
     } else {
-      Animated.parallel([
-        Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 100, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
-      ]).start();
+      // setValue で即時リセット: useNativeDriver 環境でスタイル除去だけでは
+      // ネイティブ側の scale が残るため、明示的に 1 へ戻す
+      scaleAnim.stopAnimation();
+      glowAnim.stopAnimation();
+      scaleAnim.setValue(1);
+      glowAnim.setValue(0);
     }
   }, [selectedIndex]);
 
