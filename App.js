@@ -1,5 +1,5 @@
 import { registerRootComponent } from 'expo';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { useFonts, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
@@ -23,12 +23,23 @@ function App() {
     SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
   });
+  const [splashHidden, setSplashHidden] = useState(false);
 
   useEffect(() => {
-    if (fontsLoaded || fontsError) SplashScreen.hideAsync();
+    const hide = () => {
+      if (splashHidden) return;
+      setSplashHidden(true);
+      SplashScreen.hideAsync().catch(() => {});
+    };
+    // フォントが読み込めたら即座に非表示
+    if (fontsLoaded || fontsError) { hide(); return; }
+    // 本番ビルドでフォント読み込みが止まった場合の保険（3秒）
+    const t = setTimeout(hide, 3000);
+    return () => clearTimeout(t);
   }, [fontsLoaded, fontsError]);
 
-  if (!fontsLoaded && !fontsError) return null;
+  // splashHidden になるまで何も描画しない（ネイティブスプラッシュを表示し続ける）
+  if (!splashHidden) return null;
 
   return (
     <AudioProvider>
