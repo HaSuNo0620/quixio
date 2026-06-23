@@ -223,9 +223,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   piece: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: CELL_SIZE - 4,
+    height: CELL_SIZE - 4,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   pieceText: {
-    fontSize: 19,
+    fontSize: 26,
     fontFamily: 'SpaceGrotesk_700Bold',
     color: '#FFFFFF',
     letterSpacing: -0.5,
