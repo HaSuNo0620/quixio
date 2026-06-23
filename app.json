@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Fiveon",
-    "slug": "fiveon",
+    "slug": "my-quixio",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -50,6 +50,7 @@
       "eas": {
         "projectId": "cc828a08-549c-4291-9614-06f2c6109a8a"
       }
-    }
+    },
+    "owner": "hasuno"
   }
 }
