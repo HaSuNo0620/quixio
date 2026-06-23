@@ -83,7 +83,7 @@ const StartScreen = () => {
           return (
             <Animated.View
               key={item.screen}
-              style={{ opacity: buttonAnims[i], transform: [{ translateY: btnTransY }], width: '100%', alignItems: 'center' }}
+              style={{ opacity: buttonAnims[i], transform: [{ translateY: btnTransY }] }}
             >
               <TouchableOpacity
                 style={[styles.menuBtn, { backgroundColor: bgColor }, !item.primary && styles.secondaryBtn]}
@@ -224,14 +224,12 @@ const styles = StyleSheet.create({
   menuArea: {
     paddingHorizontal: 28,
     paddingBottom: 36,
-    alignItems: 'center',
     gap: 10,
   },
   menuBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 280,
     paddingVertical: 15,
     paddingHorizontal: 24,
     borderRadius: 14,
@@ -257,7 +255,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 10,
     borderTopWidth: 1,
-    width: 280,
     justifyContent: 'center',
     flexWrap: 'wrap',
   },

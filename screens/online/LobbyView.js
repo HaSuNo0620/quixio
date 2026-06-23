@@ -25,78 +25,102 @@ export const LobbyView = ({ themes, createRoom, joinRoom, findRandomMatch, error
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}
       >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={[styles.lobbyContainer, { backgroundColor: themes.background }]}>
-          <TouchableOpacity
-            style={[styles.backBtn, { backgroundColor: themes.backButtonBackground }]}
-            onPress={goBack}
-            activeOpacity={0.8}
-          >
-            <Icon name="arrow-back" size={24} color={themes.backButtonColor} />
-          </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={[styles.root, { backgroundColor: themes.background }]}>
 
-          <Text style={[styles.lobbyTitle, { color: themes.textColor }]}>オンライン対戦</Text>
+            {/* Header */}
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={[styles.headerBtn, { backgroundColor: themes.backButtonBackground }]}
+                onPress={goBack}
+                activeOpacity={0.8}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Icon name="arrow-back" size={22} color={themes.backButtonColor} />
+              </TouchableOpacity>
+              <Text style={[styles.headerTitle, { color: themes.textColor }]}>オンライン対戦</Text>
+              <View style={styles.headerSpacer} />
+            </View>
 
-          <TouchableOpacity
-            style={[styles.primaryBtn, { backgroundColor: themes.buttonBackground }]}
-            onPress={createRoom}
-            activeOpacity={0.8}
-          >
-            <Icon name="add-circle-outline" size={22} color={themes.buttonText} />
-            <Text style={[styles.primaryBtnText, { color: themes.buttonText }]}>ルームを作成</Text>
-          </TouchableOpacity>
+            {/* Content */}
+            <View style={styles.content}>
 
-          <Text style={[styles.orText, { color: themes.subTextColor }]}>または</Text>
+              <TouchableOpacity
+                style={[styles.primaryBtn, { backgroundColor: themes.buttonBackground }]}
+                onPress={createRoom}
+                activeOpacity={0.8}
+              >
+                <Icon name="add-circle-outline" size={22} color={themes.buttonText} />
+                <Text style={[styles.primaryBtnText, { color: themes.buttonText }]}>ルームを作成</Text>
+              </TouchableOpacity>
 
-          <View style={styles.codeRow}>
-            <TextInput
-              style={[styles.codeInput, {
-                backgroundColor: themes.boardBackground,
-                color: themes.textColor,
-                borderColor: themes.cellBorder,
-              }]}
-              placeholder="ルームコード (6文字)"
-              placeholderTextColor={themes.subTextColor}
-              value={codeInput}
-              onChangeText={(t) => setCodeInput(t.toUpperCase().slice(0, 6))}
-              autoCapitalize="characters"
-              returnKeyType="done"
-            />
-            <TouchableOpacity
-              style={[styles.joinBtn, {
-                backgroundColor: codeInput.length === 6 ? themes.buttonBackground : themes.modalSecondaryBackground,
-              }]}
-              onPress={handleJoin}
-              disabled={codeInput.length < 6 || joining}
-              activeOpacity={0.8}
-            >
-              {joining
-                ? <ActivityIndicator size="small" color={themes.buttonText} />
-                : <Text style={[styles.joinBtnText, { color: codeInput.length === 6 ? themes.buttonText : themes.subTextColor }]}>参加</Text>
-              }
-            </TouchableOpacity>
+              <Divider themes={themes} />
+
+              <View style={styles.codeSection}>
+                <View style={styles.codeRow}>
+                  <TextInput
+                    style={[styles.codeInput, {
+                      backgroundColor: themes.boardBackground,
+                      color: themes.textColor,
+                      borderColor: themes.cellBorder,
+                    }]}
+                    placeholder="ルームコード (6文字)"
+                    placeholderTextColor={themes.subTextColor}
+                    value={codeInput}
+                    onChangeText={(t) => setCodeInput(t.toUpperCase().slice(0, 6))}
+                    autoCapitalize="characters"
+                    returnKeyType="join"
+                    onSubmitEditing={handleJoin}
+                  />
+                  <TouchableOpacity
+                    style={[styles.joinBtn, {
+                      backgroundColor: codeInput.length === 6
+                        ? themes.buttonBackground
+                        : themes.modalSecondaryBackground,
+                    }]}
+                    onPress={handleJoin}
+                    disabled={codeInput.length < 6 || joining}
+                    activeOpacity={0.8}
+                  >
+                    {joining
+                      ? <ActivityIndicator size="small" color={themes.buttonText} />
+                      : <Text style={[styles.joinBtnText, {
+                          color: codeInput.length === 6 ? themes.buttonText : themes.subTextColor,
+                        }]}>参加</Text>
+                    }
+                  </TouchableOpacity>
+                </View>
+                {errorMsg ? (
+                  <Text style={styles.errorText}>{errorMsg}</Text>
+                ) : null}
+              </View>
+
+              <Divider themes={themes} />
+
+              <TouchableOpacity
+                style={[styles.secondaryBtn, { backgroundColor: themes.modalSecondaryBackground }]}
+                onPress={findRandomMatch}
+                activeOpacity={0.8}
+              >
+                <Icon name="shuffle" size={20} color={themes.modalSecondaryText} />
+                <Text style={[styles.secondaryBtnText, { color: themes.modalSecondaryText }]}>ランダムマッチ</Text>
+              </TouchableOpacity>
+
+            </View>
           </View>
-
-          {errorMsg && (
-            <Text style={[styles.errorText, { color: '#E53E3E' }]}>{errorMsg}</Text>
-          )}
-
-          <Text style={[styles.orText, { color: themes.subTextColor }]}>または</Text>
-
-          <TouchableOpacity
-            style={[styles.secondaryBtn, { backgroundColor: themes.modalSecondaryBackground }]}
-            onPress={findRandomMatch}
-            activeOpacity={0.8}
-          >
-            <Icon name="shuffle" size={22} color={themes.modalSecondaryText} />
-            <Text style={[styles.secondaryBtnText, { color: themes.modalSecondaryText }]}>ランダムマッチ</Text>
-          </TouchableOpacity>
-        </View>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
+
+const Divider = ({ themes }) => (
+  <View style={styles.divider}>
+    <View style={[styles.dividerLine, { backgroundColor: themes.cellBorder }]} />
+    <Text style={[styles.dividerText, { color: themes.subTextColor }]}>または</Text>
+    <View style={[styles.dividerLine, { backgroundColor: themes.cellBorder }]} />
+  </View>
+);
 
 // ─── Waiting View ──────────────────────────────────────────────────────────────
 export const WaitingView = ({ themes, roomCode, handleLeave }) => (
@@ -146,30 +170,39 @@ export const ErrorView = ({ themes, errorMsg, handleLeave }) => (
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  lobbyContainer: {
+  root: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 28,
   },
-  backBtn: {
-    position: 'absolute',
-    top: 28,
-    right: 20,
-    padding: 18,
-    borderRadius: 14,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  headerBtn: {
+    padding: 10,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 4,
-    elevation: 4,
-    zIndex: 10,
+    elevation: 3,
   },
-  lobbyTitle: {
-    fontSize: 26,
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
     fontFamily: 'SpaceGrotesk_700Bold',
-    marginBottom: 32,
-    marginTop: 48,
+  },
+  headerSpacer: {
+    width: 42,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+    paddingBottom: 24,
   },
   primaryBtn: {
     flexDirection: 'row',
@@ -178,7 +211,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 28,
     borderRadius: 14,
-    width: 280,
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
@@ -190,16 +222,27 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontFamily: 'SpaceGrotesk_700Bold',
   },
-  orText: {
-    fontSize: 14,
-    marginVertical: 14,
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 18,
+    gap: 10,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 13,
     fontFamily: 'SpaceGrotesk_500Medium',
+  },
+  codeSection: {
+    gap: 8,
   },
   codeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    width: 280,
   },
   codeInput: {
     flex: 1,
@@ -225,8 +268,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
-    marginTop: 8,
     fontFamily: 'SpaceGrotesk_500Medium',
+    color: '#E53E3E',
+    textAlign: 'center',
   },
   secondaryBtn: {
     flexDirection: 'row',
@@ -235,7 +279,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 14,
-    width: 280,
     justifyContent: 'center',
   },
   secondaryBtnText: {
