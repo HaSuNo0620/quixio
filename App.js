@@ -1,5 +1,5 @@
 import { registerRootComponent } from 'expo';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { useFonts, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
@@ -23,23 +23,12 @@ function App() {
     SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
   });
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // 最大4秒でスプラッシュを強制終了（フォント読み込み遅延対策）
-    const timeout = setTimeout(() => setReady(true), 4000);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  useEffect(() => {
-    if (fontsLoaded || fontsError) setReady(true);
+    if (fontsLoaded || fontsError) SplashScreen.hideAsync();
   }, [fontsLoaded, fontsError]);
 
-  useEffect(() => {
-    if (ready) SplashScreen.hideAsync();
-  }, [ready]);
-
-  if (!ready) return null;
+  if (!fontsLoaded && !fontsError) return null;
 
   return (
     <AudioProvider>

@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useRef, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
+import Purchases from 'react-native-purchases';
 
 const REVENUECAT_IOS_KEY = 'test_ryEMnDwkaVNRuVrMhPVhlVCoXrr';
 const ENTITLEMENT_PRO = 'Pro';
@@ -14,44 +15,32 @@ const PurchaseContext = createContext({
 export const PurchaseProvider = ({ children }) => {
   const [isPro, setIsPro] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const purchasesRef = useRef(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    Purchases.configure({ apiKey: REVENUECAT_IOS_KEY });
+    checkProStatus();
+  }, []);
 
   const checkProStatus = async () => {
-    if (!purchasesRef.current) return;
     try {
-      const info = await purchasesRef.current.getCustomerInfo();
+      const info = await Purchases.getCustomerInfo();
       setIsPro(!!info.entitlements.active[ENTITLEMENT_PRO]);
     } catch {
       // No internet or not configured — remain free tier
     }
   };
 
-  useEffect(() => {
-    // useEffect 内で require: New Architecture / TurboModule 初期化後に確実に実行
-    if (Platform.OS !== 'ios') return;
-    try {
-      purchasesRef.current = require('react-native-purchases').default;
-      purchasesRef.current.configure({ apiKey: REVENUECAT_IOS_KEY });
-      checkProStatus();
-    } catch {
-      // Expo Go または未対応環境
-    }
-  }, []);
-
   const purchasePro = async () => {
-    if (!purchasesRef.current) {
-      Alert.alert('未対応', 'この環境では購入できません。');
-      return;
-    }
     setIsLoading(true);
     try {
-      const offerings = await purchasesRef.current.getOfferings();
+      const offerings = await Purchases.getOfferings();
       const pkg = offerings.current?.availablePackages[0];
       if (!pkg) {
         Alert.alert('エラー', '商品情報を取得できませんでした。');
         return;
       }
-      await purchasesRef.current.purchasePackage(pkg);
+      await Purchases.purchasePackage(pkg);
       setIsPro(true);
       Alert.alert('ありがとうございます！', '広告が削除されました。');
     } catch (e) {
@@ -64,13 +53,9 @@ export const PurchaseProvider = ({ children }) => {
   };
 
   const restorePurchases = async () => {
-    if (!purchasesRef.current) {
-      Alert.alert('未対応', 'この環境では復元できません。');
-      return;
-    }
     setIsLoading(true);
     try {
-      const info = await purchasesRef.current.restorePurchases();
+      const info = await Purchases.restorePurchases();
       const hasPro = !!info.entitlements.active[ENTITLEMENT_PRO];
       setIsPro(hasPro);
       Alert.alert(

@@ -1,32 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { usePurchase } from './PurchaseContext';
+
+const AD_UNIT_ID = __DEV__
+  ? TestIds.BANNER
+  : 'ca-app-pub-9542588113001257/4988492977';
 
 const BannerAdWrapper = () => {
   const { isPro } = usePurchase();
-  const [AdComponents, setAdComponents] = useState(null);
-
-  useEffect(() => {
-    // useEffect 内で require することで New Architecture の初期化後に実行される
-    try {
-      const { BannerAd, BannerAdSize, TestIds } = require('react-native-google-mobile-ads');
-      setAdComponents({ BannerAd, BannerAdSize, TestIds });
-    } catch {
-      // Expo Go または未対応環境
-    }
-  }, []);
-
-  if (isPro || !AdComponents) return null;
-
-  const { BannerAd, BannerAdSize, TestIds } = AdComponents;
-  const adUnitId = __DEV__
-    ? TestIds.BANNER
-    : 'ca-app-pub-9542588113001257/4988492977';
-
+  if (isPro) return null;
   return (
     <View style={styles.container}>
       <BannerAd
-        unitId={adUnitId}
+        unitId={AD_UNIT_ID}
         size={BannerAdSize.BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
       />
