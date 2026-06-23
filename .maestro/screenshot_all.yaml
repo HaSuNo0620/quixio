@@ -1,0 +1,51 @@
+appId: com.yuuki.quixio
+---
+# ── 1. Launch ───────────────────────────────────────────────────────────────
+- launchApp:
+    clearState: true
+
+# ── 2. Title screen ─────────────────────────────────────────────────────────
+- assertVisible:
+    text: "Fiveon"
+- takeScreenshot: "01_title"
+
+# ── 3. AI game – difficulty select ──────────────────────────────────────────
+- tapOn:
+    text: "AI と対戦"
+- assertVisible:
+    text: "AI の強さを選んでください"
+- takeScreenshot: "02_difficulty_select"
+
+# Hard difficulty for a more interesting board state
+- tapOn:
+    text: "難しい"
+- tapOn:
+    text: "ゲームを開始"
+
+# ── 4. AI game board – player turn ──────────────────────────────────────────
+- assertVisible:
+    text: "あなたの番"
+- takeScreenshot: "03_ai_game_player_turn"
+
+# Make one move: tap top-left outer cell, then push right
+- tapOn:
+    point: "10%,28%"
+- tapOn:
+    point: "79%,42%"   # right arrow
+- runFlow: .maestro/_wait_ai_turn.yaml
+
+# ── 5. AI game board – AI thinking ──────────────────────────────────────────
+- takeScreenshot: "04_ai_game_thinking"
+- runFlow: .maestro/_wait_ai_turn.yaml
+
+# ── 6. PvP screen ────────────────────────────────────────────────────────────
+- tapOn:
+    text: "←"
+- tapOn:
+    text: "いいえ"   # cancel exit confirm if shown
+
+- tapOn:
+    text: "2人で対戦"
+- assertVisible:
+    text: "X の番"
+- takeScreenshot: "05_pvp_game"

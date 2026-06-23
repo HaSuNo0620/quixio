@@ -1,0 +1,7 @@
+appId: com.yuuki.quixio
+---
+# Waits up to ~3 s for the player-turn badge to reappear after AI moves
+- extendedWaitUntil:
+    visible:
+      text: "あなたの番"
+    timeout: 4000
