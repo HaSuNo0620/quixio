@@ -1,5 +1,5 @@
 import { registerRootComponent } from 'expo';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { useFonts, SpaceGrotesk_500Medium, SpaceGrotesk_600SemiBold, SpaceGrotesk_700Bold } from '@expo-google-fonts/space-grotesk';
@@ -18,28 +18,16 @@ SplashScreen.preventAutoHideAsync();
 const Stack = createStackNavigator();
 
 function App() {
-  const [fontsLoaded, fontsError] = useFonts({
+  useFonts({
     SpaceGrotesk_500Medium,
     SpaceGrotesk_600SemiBold,
     SpaceGrotesk_700Bold,
   });
-  const [splashHidden, setSplashHidden] = useState(false);
 
+  // フォント読み込みを待たず即座にスプラッシュを閉じてアプリを表示
   useEffect(() => {
-    const hide = () => {
-      if (splashHidden) return;
-      setSplashHidden(true);
-      SplashScreen.hideAsync().catch(() => {});
-    };
-    // フォントが読み込めたら即座に非表示
-    if (fontsLoaded || fontsError) { hide(); return; }
-    // 本番ビルドでフォント読み込みが止まった場合の保険（3秒）
-    const t = setTimeout(hide, 3000);
-    return () => clearTimeout(t);
-  }, [fontsLoaded, fontsError]);
-
-  // splashHidden になるまで何も描画しない（ネイティブスプラッシュを表示し続ける）
-  if (!splashHidden) return null;
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   return (
     <AudioProvider>
