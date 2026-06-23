@@ -4,6 +4,7 @@ import {
   ActivityIndicator, KeyboardAvoidingView, Platform,
   TouchableWithoutFeedback, Keyboard,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // ─── Lobby View ────────────────────────────────────────────────────────────────
@@ -19,10 +20,11 @@ export const LobbyView = ({ themes, createRoom, joinRoom, findRandomMatch, error
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: themes.background }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={[styles.lobbyContainer, { backgroundColor: themes.background }]}>
           <TouchableOpacity
@@ -91,7 +93,8 @@ export const LobbyView = ({ themes, createRoom, joinRoom, findRandomMatch, error
           </TouchableOpacity>
         </View>
       </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -151,10 +154,10 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: 'absolute',
-    top: 12,
+    top: 28,
     right: 20,
-    padding: 10,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
