@@ -77,11 +77,11 @@ const FiveonScreenPvP = () => {
           />
         </View>
 
-        {gameState.selectedIndex !== null && (
-          <View style={gameStyles.controlsArea}>
+        <View style={gameStyles.controlsArea}>
+          {gameState.selectedIndex !== null && (
             <ControlButtons gameState={gameState} handleInsert={handleInsert} />
-          </View>
-        )}
+          )}
+        </View>
 
         <BannerAdWrapper />
 

@@ -96,14 +96,14 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
   if (!themes) return null;
 
   const playerColor = currentPlayer === 'X' ? themes.xColor : themes.oColor;
-  const playerLabel = turnLabel ?? (currentPlayer === 'X' ? 'Player X' : 'Player O');
+  const playerLabel = turnLabel ?? (currentPlayer === 'X' ? 'X の番' : 'O の番');
 
   const slideInfo = slideMove ? getSlideInfo(slideMove.fromIndex, slideMove.direction) : null;
 
   return (
     <View style={[styles.container, { backgroundColor: themes.background }]}>
       <Animated.View style={[styles.turnBadge, { backgroundColor: playerColor, opacity: fadeAnim }]}>
-        <Text style={styles.turnText}>{playerLabel} の番</Text>
+        <Text style={styles.turnText}>{playerLabel}</Text>
       </Animated.View>
 
       <View style={[styles.board, { backgroundColor: themes.cellBorder }]}>

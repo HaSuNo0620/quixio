@@ -33,6 +33,7 @@ const FiveonScreenAI = () => {
   } = useGameLogic();
 
   const [difficulty, setDifficulty] = useState('medium');
+  const [gameStarted, setGameStarted] = useState(false);
   const { recordAI } = useStats();
   const { isPro, isLoading: purchaseLoading, purchasePro, restorePurchases } = usePurchase();
   const innerTimerRef = useRef(null);
@@ -77,6 +78,49 @@ const FiveonScreenAI = () => {
   const winnerColor = gameState.winner === HUMAN_PLAYER ? themes.xColor : themes.oColor;
   const isPlayerTurn = gameState.currentPlayer !== AI_PLAYER;
 
+  if (!gameStarted) {
+    return (
+      <SafeAreaView style={[gameStyles.container, { backgroundColor: themes.background }]}>
+        <TouchableOpacity
+          style={[gameStyles.backButton, { backgroundColor: themes.backButtonBackground }]}
+          onPress={() => navigation.replace('StartScreen')}
+          activeOpacity={0.8}
+          hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
+        >
+          <Icon name="arrow-back" size={24} color={themes.backButtonColor} />
+        </TouchableOpacity>
+
+        <View style={styles.diffSelectArea}>
+          <Text style={[styles.diffSelectTitle, { color: themes.textColor }]}>AI の強さを選んでください</Text>
+          <View style={styles.diffSelectRow}>
+            {DIFFICULTIES.map((d) => (
+              <TouchableOpacity
+                key={d}
+                onPress={() => setDifficulty(d)}
+                style={[
+                  styles.diffSelectBtn,
+                  { backgroundColor: d === difficulty ? themes.buttonBackground : themes.backButtonBackground },
+                ]}
+                activeOpacity={0.75}
+              >
+                <Text style={[styles.diffSelectBtnText, { color: d === difficulty ? themes.buttonText : themes.textColor }]}>
+                  {DIFFICULTY_LABEL[d]}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity
+            style={[gameStyles.modalBtn, { backgroundColor: themes.buttonBackground, width: 200 }]}
+            onPress={() => setGameStarted(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={[gameStyles.modalBtnText, { color: themes.buttonText }]}>ゲームを開始</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <TouchableWithoutFeedback onPress={() => { if (isPlayerTurn) handleCancelSelection(); Keyboard.dismiss(); }}>
       <SafeAreaView style={[gameStyles.container, { backgroundColor: themes.background }]}>
@@ -110,11 +154,11 @@ const FiveonScreenAI = () => {
           />
         </View>
 
-        {gameState.selectedIndex !== null && isPlayerTurn && (
-          <View style={gameStyles.controlsArea}>
+        <View style={gameStyles.controlsArea}>
+          {gameState.selectedIndex !== null && isPlayerTurn && (
             <ControlButtons gameState={gameState} handleInsert={handleInsert} />
-          </View>
-        )}
+          )}
+        </View>
 
         <BannerAdWrapper />
 
@@ -183,6 +227,31 @@ const FiveonScreenAI = () => {
 };
 
 const styles = StyleSheet.create({
+  diffSelectArea: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 28,
+    paddingHorizontal: 32,
+  },
+  diffSelectTitle: {
+    fontSize: 20,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    textAlign: 'center',
+  },
+  diffSelectRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  diffSelectBtn: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+  },
+  diffSelectBtnText: {
+    fontSize: 16,
+    fontFamily: 'SpaceGrotesk_600SemiBold',
+  },
   difficultyRow: {
     flexDirection: 'row',
     gap: 8,

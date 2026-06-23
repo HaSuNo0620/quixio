@@ -197,6 +197,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    maxWidth: '100%',
+    paddingHorizontal: 20,
     marginBottom: 8,
   },
   xMark: {

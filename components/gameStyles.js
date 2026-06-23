@@ -38,8 +38,10 @@ const gameStyles = StyleSheet.create({
     width: '100%',
   },
   controlsArea: {
+    height: 224,
     paddingBottom: 28,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   modalOverlay: {
     flex: 1,
