@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Alert, Platform } from 'react-native';
-import Purchases from 'react-native-purchases';
+
+// Dynamic require so Expo Go doesn't crash (native module absent)
+let Purchases = null;
+try {
+  Purchases = require('react-native-purchases').default;
+} catch {
+  // Expo Go — purchases unavailable
+}
 
 // Replace with your RevenueCat iOS API key after setting up the dashboard
 const REVENUECAT_IOS_KEY = 'test_ryEMnDwkaVNRuVrMhPVhlVCoXrr';
@@ -18,12 +25,13 @@ export const PurchaseProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS !== 'ios') return;
+    if (Platform.OS !== 'ios' || !Purchases) return;
     Purchases.configure({ apiKey: REVENUECAT_IOS_KEY });
     checkProStatus();
   }, []);
 
   const checkProStatus = async () => {
+    if (!Purchases) return;
     try {
       const info = await Purchases.getCustomerInfo();
       setIsPro(!!info.entitlements.active[ENTITLEMENT_PRO]);
@@ -33,6 +41,7 @@ export const PurchaseProvider = ({ children }) => {
   };
 
   const purchasePro = async () => {
+    if (!Purchases) { Alert.alert('未対応', 'この環境では購入できません。'); return; }
     setIsLoading(true);
     try {
       const offerings = await Purchases.getOfferings();
@@ -54,6 +63,7 @@ export const PurchaseProvider = ({ children }) => {
   };
 
   const restorePurchases = async () => {
+    if (!Purchases) { Alert.alert('未対応', 'この環境では復元できません。'); return; }
     setIsLoading(true);
     try {
       const info = await Purchases.restorePurchases();

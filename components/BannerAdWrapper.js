@@ -1,16 +1,27 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { usePurchase } from './PurchaseContext';
 
-// Replace with your real AdMob banner unit ID before App Store submission
+// Dynamic require so Expo Go doesn't crash (native module absent)
+let BannerAd = null;
+let BannerAdSize = null;
+let TestIds = null;
+try {
+  const ads = require('react-native-google-mobile-ads');
+  BannerAd    = ads.BannerAd;
+  BannerAdSize = ads.BannerAdSize;
+  TestIds     = ads.TestIds;
+} catch {
+  // Expo Go — ads unavailable
+}
+
 const AD_UNIT_ID = __DEV__
-  ? TestIds.BANNER
+  ? (TestIds?.BANNER ?? 'test')
   : 'ca-app-pub-9542588113001257/4988492977';
 
 const BannerAdWrapper = () => {
   const { isPro } = usePurchase();
-  if (isPro) return null;
+  if (isPro || !BannerAd) return null;
   return (
     <View style={styles.container}>
       <BannerAd
