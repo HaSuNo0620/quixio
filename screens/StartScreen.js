@@ -10,7 +10,7 @@ import { useStats } from '../hooks/useStats';
 import { useOnboarding } from '../hooks/useOnboarding';
 
 const MENU_ITEMS = [
-  { label: 'プレイヤー vs プレイヤー', icon: 'group',        screen: 'FiveonScreenPvP', primary: true },
+  { label: 'オフライン対戦',           icon: 'group',        screen: 'FiveonScreenPvP', primary: true },
   { label: 'AI と対戦',               icon: 'computer',     screen: 'FiveonScreenAI',  primary: true },
   { label: 'オンライン対戦',           icon: 'wifi',         screen: 'OnlineScreen',    primary: true },
   { label: 'ルール説明',               icon: 'help-outline', screen: 'RulesScreen',     primary: false },

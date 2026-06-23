@@ -145,10 +145,12 @@ const FiveonScreenAI = () => {
           <Icon name={isMuted ? 'volume-off' : 'volume-up'} size={22} color={themes.backButtonColor} />
         </TouchableOpacity>
 
-        <View style={[styles.difficultyChip, { backgroundColor: themes.backButtonBackground }]}>
-          <Text style={[styles.difficultyChipText, { color: themes.subTextColor }]}>
-            {DIFFICULTY_LABEL[difficulty]}
-          </Text>
+        <View style={styles.difficultyChipContainer}>
+          <View style={[styles.difficultyChip, { backgroundColor: themes.backButtonBackground }]}>
+            <Text style={[styles.difficultyChipText, { color: themes.subTextColor }]}>
+              {DIFFICULTY_LABEL[difficulty]}
+            </Text>
+          </View>
         </View>
 
         <View style={gameStyles.boardArea}>
@@ -248,17 +250,21 @@ const FiveonScreenAI = () => {
 };
 
 const styles = StyleSheet.create({
-  difficultyChip: {
+  difficultyChipContainer: {
     position: 'absolute',
-    top: 82,
-    right: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 100,
+    top: 54,
+    left: 70,
+    right: 70,
+    alignItems: 'center',
     zIndex: 9,
   },
+  difficultyChip: {
+    paddingHorizontal: 18,
+    paddingVertical: 7,
+    borderRadius: 100,
+  },
   difficultyChipText: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'SpaceGrotesk_600SemiBold',
   },
   diffSelectArea: {

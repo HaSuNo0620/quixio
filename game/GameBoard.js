@@ -29,7 +29,7 @@ const ThinkingDots = ({ color }) => {
   );
 };
 import { useTheme } from '../components/ThemeConfig';
-import { BOARD_SIZE, OUTER_INDICES, TOP_ROW, BOTTOM_ROW, LEFT_COL, RIGHT_COL } from '../constants';
+import { BOARD_SIZE, OUTER_INDICES } from '../constants';
 import { useSound } from '../hooks/useSound';
 import bgmFile from '../assets/sounds/Secret_Talk_2.mp3';
 
@@ -159,15 +159,6 @@ const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, 
 
   const slideInfo = slideMove ? getSlideInfo(slideMove.fromIndex, slideMove.direction) : null;
 
-  // 方向プレビュー: 選択中コマの有効方向の隣セルを薄くハイライト
-  const previewCells = new Set();
-  if (selectedIndex !== null) {
-    if (!TOP_ROW.includes(selectedIndex)) previewCells.add(selectedIndex - BOARD_SIZE);
-    if (!BOTTOM_ROW.includes(selectedIndex)) previewCells.add(selectedIndex + BOARD_SIZE);
-    if (!LEFT_COL.includes(selectedIndex)) previewCells.add(selectedIndex - 1);
-    if (!RIGHT_COL.includes(selectedIndex)) previewCells.add(selectedIndex + 1);
-  }
-
   return (
     <View style={[styles.container, { backgroundColor: themes.background }]}>
       <Animated.View style={[
@@ -189,7 +180,6 @@ const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, 
             const isWinCell = winningLine?.includes(index);
             const isFromCell = slideInfo && index === slideMove.fromIndex;
             const isAffectedCell = slideInfo && slideInfo.affected.includes(index);
-            const isPreview = previewCells.has(index);
             const cellColor = cell === 'X' ? themes.xColor : themes.oColor;
             const winColor = cell === 'X' ? themes.xColor : themes.oColor;
 
@@ -221,11 +211,6 @@ const GameBoard = ({ board, selectedIndex, handleSelect, handleCancelSelection, 
                       styles.winOverlay,
                       { backgroundColor: winColor, borderColor: winColor, opacity: winGlowAnim },
                     ]}
-                  />
-                )}
-                {isPreview && !cell && (
-                  <View
-                    style={[styles.previewOverlay, { backgroundColor: playerColor }]}
                   />
                 )}
                 {isSelected && (
@@ -309,12 +294,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 6,
     margin: 2,
-  },
-  previewOverlay: {
-    position: 'absolute',
-    top: 4, left: 4, right: 4, bottom: 4,
-    borderRadius: 8,
-    opacity: 0.18,
   },
   emptyDot: {
     position: 'absolute',
