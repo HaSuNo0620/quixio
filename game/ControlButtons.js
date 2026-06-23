@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { TOP_ROW, BOTTOM_ROW, LEFT_COL, RIGHT_COL } from '../constants';
 import { useTheme } from '../components/ThemeConfig';
 
-const ARROW_MAP = { up: '↑', down: '↓', left: '←', right: '→' };
+const ICON_MAP = { up: 'arrow-upward', down: 'arrow-downward', left: 'arrow-back', right: 'arrow-forward' };
 
 const ControlButtons = ({ gameState, handleInsert }) => {
   const { themes } = useTheme();
@@ -29,9 +30,11 @@ const ControlButtons = ({ gameState, handleInsert }) => {
         ]}
         disabled={!allowed}
       >
-        <Text style={[styles.arrowText, { color: allowed ? themes.buttonText : 'transparent' }]}>
-          {ARROW_MAP[dir]}
-        </Text>
+        <Icon
+          name={ICON_MAP[dir]}
+          size={28}
+          color={allowed ? themes.buttonText : 'transparent'}
+        />
       </TouchableOpacity>
     );
   };
@@ -84,11 +87,6 @@ const styles = StyleSheet.create({
   arrowBtnHidden: {
     elevation: 0,
     shadowOpacity: 0,
-  },
-  arrowText: {
-    fontSize: 26,
-    fontWeight: '700',
-    lineHeight: 30,
   },
   corner: {
     width: BTN,

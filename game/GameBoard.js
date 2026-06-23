@@ -87,8 +87,8 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
     }
     Animated.loop(
       Animated.sequence([
-        Animated.timing(winGlowAnim, { toValue: 0.5, duration: 450, useNativeDriver: true }),
-        Animated.timing(winGlowAnim, { toValue: 0.05, duration: 450, useNativeDriver: true }),
+        Animated.timing(winGlowAnim, { toValue: 0.72, duration: 280, useNativeDriver: true }),
+        Animated.timing(winGlowAnim, { toValue: 0.18, duration: 280, useNativeDriver: true }),
       ])
     ).start();
   }, [winningLine]);
@@ -140,7 +140,8 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
                 <Animated.View
                   style={[
                     StyleSheet.absoluteFill,
-                    { backgroundColor: winColor, opacity: winGlowAnim },
+                    styles.winOverlay,
+                    { backgroundColor: winColor, borderColor: winColor, opacity: winGlowAnim },
                   ]}
                 />
               )}
@@ -153,6 +154,9 @@ const GameBoard = ({ board, selectedIndex, handleSelect, currentPlayer, winningL
                   ]}
                   pointerEvents="none"
                 />
+              )}
+              {!cell && !isOuter && (
+                <View style={styles.emptyDot} />
               )}
               <Animated.View
                 style={
@@ -215,6 +219,18 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderRadius: 6,
     margin: 3,
+  },
+  winOverlay: {
+    borderWidth: 2,
+    borderRadius: 6,
+    margin: 2,
+  },
+  emptyDot: {
+    position: 'absolute',
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'rgba(128,128,128,0.2)',
   },
   cell: {
     width: CELL_SIZE,
