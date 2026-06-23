@@ -6,12 +6,13 @@ const { width: SW, height: SH } = Dimensions.get('window');
 const COLORS = [
   '#E53E3E', '#3182CE', '#48BB78', '#ECC94B',
   '#9F7AEA', '#ED8936', '#F6AD55', '#FC8181',
-  '#68D391', '#76E4F7',
+  '#68D391', '#76E4F7', '#F687B3', '#FBD38D',
 ];
-const PARTICLE_COUNT = 42;
+const PARTICLE_COUNT = 80;
 
-const Particle = ({ startX, color, size, delay, fallDuration }) => {
+const Particle = ({ startX, color, size, delay, fallDuration, driftX }) => {
   const translateY = useRef(new Animated.Value(0)).current;
+  const translateX = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const rotate = useRef(new Animated.Value(0)).current;
 
@@ -19,24 +20,28 @@ const Particle = ({ startX, color, size, delay, fallDuration }) => {
     Animated.parallel([
       Animated.sequence([
         Animated.delay(delay),
-        Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
-        Animated.delay(fallDuration - 420),
-        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 100, useNativeDriver: true }),
+        Animated.delay(fallDuration - 380),
+        Animated.timing(opacity, { toValue: 0, duration: 280, useNativeDriver: true }),
       ]),
       Animated.sequence([
         Animated.delay(delay),
-        Animated.timing(translateY, { toValue: SH + 40, duration: fallDuration, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: SH + 60, duration: fallDuration, useNativeDriver: true }),
       ]),
       Animated.sequence([
         Animated.delay(delay),
-        Animated.timing(rotate, { toValue: 3, duration: fallDuration, useNativeDriver: true }),
+        Animated.timing(translateX, { toValue: driftX, duration: fallDuration, easing: t => Math.sin(t * Math.PI * 2) * 0.5 + t * 0.5, useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(rotate, { toValue: 4, duration: fallDuration, useNativeDriver: true }),
       ]),
     ]).start();
   }, []);
 
   const rotation = rotate.interpolate({
-    inputRange: [0, 3],
-    outputRange: ['0deg', '1080deg'],
+    inputRange: [0, 4],
+    outputRange: ['0deg', '1440deg'],
   });
 
   return (
@@ -46,11 +51,11 @@ const Particle = ({ startX, color, size, delay, fallDuration }) => {
         top: -size,
         left: startX,
         width: size,
-        height: size,
-        borderRadius: size / 4,
+        height: size * (0.4 + Math.random() * 0.6),
+        borderRadius: size / 5,
         backgroundColor: color,
         opacity,
-        transform: [{ translateY }, { rotate: rotation }],
+        transform: [{ translateY }, { translateX }, { rotate: rotation }],
       }}
     />
   );
@@ -61,9 +66,10 @@ const makeParticles = () =>
     id: i,
     startX: Math.random() * SW,
     color: COLORS[i % COLORS.length],
-    size: 7 + Math.random() * 7,
-    delay: Math.random() * 700,
-    fallDuration: 1300 + Math.random() * 900,
+    size: 6 + Math.random() * 9,
+    delay: Math.random() * 600,
+    fallDuration: 1200 + Math.random() * 1000,
+    driftX: (Math.random() - 0.5) * 120,
   }));
 
 const ConfettiOverlay = ({ visible }) => {

@@ -240,16 +240,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   diffSelectRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 12,
+    width: '100%',
   },
   diffSelectBtn: {
     paddingHorizontal: 24,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderRadius: 14,
+    alignItems: 'center',
   },
   diffSelectBtnText: {
-    fontSize: 16,
+    fontSize: 17,
     fontFamily: 'SpaceGrotesk_600SemiBold',
   },
   difficultyRow: {
