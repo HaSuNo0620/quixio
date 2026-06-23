@@ -7,7 +7,7 @@ const gameStyles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: 12,
+    top: 28,
     right: 20,
     padding: 18,
     borderRadius: 12,
@@ -20,7 +20,7 @@ const gameStyles = StyleSheet.create({
   },
   muteButton: {
     position: 'absolute',
-    top: 12,
+    top: 28,
     left: 20,
     padding: 18,
     borderRadius: 12,
