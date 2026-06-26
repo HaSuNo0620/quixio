@@ -33,6 +33,9 @@ yarn-error.*
 .env
 .env*.local
 
+# Fastlane secrets
+fastlane/api_key.json
+
 # typescript
 *.tsbuildinfo
 
