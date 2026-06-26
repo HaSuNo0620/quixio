@@ -1,0 +1,28 @@
+default_platform(:ios)
+
+WORKSPACE  = "ios/Fiveon.xcworkspace"
+SCHEME     = "Fiveon"
+XCODEPROJ  = "ios/Fiveon.xcodeproj"
+API_KEY    = "fastlane/api_key.json"
+BUNDLE_ID  = "com.yuuki.quixio"
+ASC_BASE   = "https://api.appstoreconnect.apple.com"
+
+platform :ios do
+  desc "Upload new build to TestFlight"
+  lane :beta do
+    sh("cd .. && pod install")
+    increment_build_number(xcodeproj: XCODEPROJ)
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "build",
+      output_name: "Fiveon.ipa"
+    )
+    upload_to_testflight(
+      api_key_path: API_KEY,
+      skip_waiting_for_build_processing: true
+    )
+  end
+end
