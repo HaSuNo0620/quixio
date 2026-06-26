@@ -36,6 +36,9 @@ yarn-error.*
 # Fastlane secrets
 fastlane/api_key.json
 
+# Fastlane build output
+build/
+
 # typescript
 *.tsbuildinfo
 

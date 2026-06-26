@@ -149,7 +149,7 @@ def asc_jwt(key_data)
   private_key = OpenSSL::PKey::EC.new(File.read(key_data["key_filepath"]))
   now = Time.now.to_i
   JWT.encode(
-    { iss: key_data["issuer_id"], iat: now, exp: now + 1200, aud: "appstoreconnect-v1" },
+    { iss: key_data["issuer_id"], iat: now, exp: now + 1000, aud: ["appstoreconnect-v1"] },
     private_key,
     "ES256",
     { kid: key_data["key_id"] }
@@ -166,7 +166,11 @@ def asc_get(url, headers)
   http.use_ssl = true
   req = Net::HTTP::Get.new(uri)
   headers.each { |k, v| req[k] = v }
-  JSON.parse(http.request(req).body)
+  response = http.request(req)
+  unless response.is_a?(Net::HTTPSuccess)
+    UI.user_error!("ASC API error #{response.code} for GET #{url}: #{response.body}")
+  end
+  JSON.parse(response.body)
 end
 
 def asc_post(url, headers, body)
@@ -176,5 +180,9 @@ def asc_post(url, headers, body)
   req = Net::HTTP::Post.new(uri)
   headers.each { |k, v| req[k] = v }
   req.body = body.to_json
-  JSON.parse(http.request(req).body)
+  response = http.request(req)
+  unless response.is_a?(Net::HTTPSuccess)
+    UI.important("ASC API #{response.code} for POST #{url}: #{response.body}")
+  end
+  JSON.parse(response.body)
 end
