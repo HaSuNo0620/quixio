@@ -1,3 +1,9 @@
+# fastlane/Fastfile
+require 'net/http'
+require 'json'
+require 'openssl'
+require 'jwt'
+
 default_platform(:ios)
 
 WORKSPACE  = "ios/Fiveon.xcworkspace"
@@ -47,4 +53,128 @@ platform :ios do
       precheck_include_in_app_purchases: false
     )
   end
+
+  desc "Create Quixio_Pro IAP in App Store Connect (run once)"
+  lane :setup_iap do
+    key_data   = JSON.parse(File.read(API_KEY))
+    asc_token  = asc_jwt(key_data)
+    headers    = asc_headers(asc_token)
+
+    # 1. Get app ID
+    apps = asc_get("#{ASC_BASE}/v1/apps?filter[bundleId]=#{BUNDLE_ID}", headers)
+    app_id = apps["data"][0]["id"]
+    UI.message("App ID: #{app_id}")
+
+    # 2. Check if IAP already exists
+    existing = asc_get(
+      "#{ASC_BASE}/v2/inAppPurchases?filter[app]=#{app_id}&filter[productId]=Quixio_Pro",
+      headers
+    )["data"]
+
+    if existing.length > 0
+      iap_id = existing[0]["id"]
+      UI.success("Quixio_Pro already exists (#{iap_id}), skipping creation")
+    else
+      # 3. Create IAP
+      result = asc_post("#{ASC_BASE}/v2/inAppPurchases", headers, {
+        data: {
+          type: "inAppPurchases",
+          attributes: {
+            name: "Pro",
+            productId: "Quixio_Pro",
+            inAppPurchaseType: "NON_CONSUMABLE"
+          },
+          relationships: {
+            app: { data: { type: "apps", id: app_id } }
+          }
+        }
+      })
+      iap_id = result["data"]["id"]
+      UI.success("Created IAP: #{iap_id}")
+    end
+
+    # 4. Add Japanese localization (idempotent — re-posting is harmless)
+    asc_post("#{ASC_BASE}/v2/inAppPurchaseLocalizations", headers, {
+      data: {
+        type: "inAppPurchaseLocalizations",
+        attributes: { locale: "ja", name: "Pro版", description: "広告を完全に削除します" },
+        relationships: {
+          inAppPurchaseV2: { data: { type: "inAppPurchases", id: iap_id } }
+        }
+      }
+    })
+    UI.success("Japanese localization set")
+
+    # 5. Set price: ¥120 (Tier 1, JPN territory)
+    price_points = asc_get(
+      "#{ASC_BASE}/v2/inAppPurchases/#{iap_id}/pricePoints?filter[territory]=JPN&limit=200",
+      headers
+    )["data"]
+    tier1 = price_points.find { |pp| pp["attributes"]["customerPrice"] == "120" }
+
+    if tier1.nil?
+      UI.important("⚠️  Could not find ¥120 price point. Set price manually in App Store Connect.")
+    else
+      asc_post("#{ASC_BASE}/v2/inAppPurchasePriceSchedules", headers, {
+        data: {
+          type: "inAppPurchasePriceSchedules",
+          relationships: {
+            inAppPurchase:  { data: { type: "inAppPurchases", id: iap_id } },
+            baseTerritory:  { data: { type: "territories", id: "JPN" } },
+            manualPrices: {
+              data: [{ type: "inAppPurchasePrices", id: "price-jpn" }]
+            }
+          }
+        },
+        included: [{
+          type: "inAppPurchasePrices",
+          id: "price-jpn",
+          attributes: { startDate: nil },
+          relationships: {
+            inAppPurchaseV2:        { data: { type: "inAppPurchases",           id: iap_id       } },
+            inAppPurchasePricePoint: { data: { type: "inAppPurchasePricePoints", id: tier1["id"] } }
+          }
+        }]
+      })
+      UI.success("Price set to ¥120 (JPN Tier 1)")
+    end
+
+    UI.important("⚠️  Add a screenshot in App Store Connect → Fiveon → In-App Purchases → Quixio_Pro before submitting for review.")
+  end
+end
+
+# ---- ASC API helpers ----
+
+def asc_jwt(key_data)
+  private_key = OpenSSL::PKey::EC.new(File.read(key_data["key_filepath"]))
+  now = Time.now.to_i
+  JWT.encode(
+    { iss: key_data["issuer_id"], iat: now, exp: now + 1200, aud: "appstoreconnect-v1" },
+    private_key,
+    "ES256",
+    { kid: key_data["key_id"] }
+  )
+end
+
+def asc_headers(token)
+  { "Authorization" => "Bearer #{token}", "Content-Type" => "application/json" }
+end
+
+def asc_get(url, headers)
+  uri = URI(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  req = Net::HTTP::Get.new(uri)
+  headers.each { |k, v| req[k] = v }
+  JSON.parse(http.request(req).body)
+end
+
+def asc_post(url, headers, body)
+  uri = URI(url)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  req = Net::HTTP::Post.new(uri)
+  headers.each { |k, v| req[k] = v }
+  req.body = body.to_json
+  JSON.parse(http.request(req).body)
 end
